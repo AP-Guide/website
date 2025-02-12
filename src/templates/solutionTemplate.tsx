@@ -1,23 +1,25 @@
 import { graphql } from 'gatsby';
 import * as React from 'react';
+import MarkdownLayout from '../components/MarkdownLayout/MarkdownLayout';
 import Layout from '../components/layout';
 import Markdown from '../components/markdown/Markdown';
-import MarkdownLayout from '../components/MarkdownLayout/MarkdownLayout';
 import SEO from '../components/seo';
 import { ConfettiProvider } from '../context/ConfettiContext';
 import { ProblemSolutionContext } from '../context/ProblemSolutionContext';
 import { SolutionInfo } from '../models/solution';
+import { removeDuplicates } from '../utils/utils';
 
 export default function Template(props) {
   const { xdm, allProblemInfo, problemInfo } = props.data;
   const { body } = xdm;
 
-  const modulesThatHaveProblem: [{ id: string; title: string }] =
-    allProblemInfo.edges
-      .filter(x => !!x.node.module)
-      .map(x => x.node.module.frontmatter);
+  const modulesThatHaveProblem: { id: string; title: string }[] =
+    removeDuplicates(
+      allProblemInfo.edges
+        .filter(x => !!x.node.module)
+        .map(x => x.node.module.frontmatter)
+    );
   // Above: We need to filter to make sure x.node.module is defined because problems listed under extraProblems.json don't have a corresponding module
-
   const markdownData = React.useMemo(() => {
     return new SolutionInfo(
       xdm.frontmatter.id,
@@ -112,6 +114,7 @@ export const pageQuery = graphql`
               title
             }
           }
+          uniqueId
         }
       }
     }

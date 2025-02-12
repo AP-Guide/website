@@ -1,28 +1,19 @@
 import * as React from 'react';
-import { useContext } from 'react';
-import { LANGUAGE_LABELS } from '../../context/UserDataContext/properties/userLang';
-import UserDataContext from '../../context/UserDataContext/UserDataContext';
+import {
+  LANGUAGE_LABELS,
+  Language,
+  useUserLangSetting,
+} from '../../context/UserDataContext/properties/simpleProperties';
 import Danger from './Danger';
 
-export const LanguageSection: React.FC = props => {
-  const { lang: userLang } = useContext(UserDataContext);
-
-  const sections = {};
-  React.Children.map(props.children, child => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const type = (child as any).type.name;
-    const typeToLang = {
-      CPPSection: 'cpp',
-      JavaSection: 'java',
-      PySection: 'py',
-    };
-    sections[typeToLang[type]] = child;
-  });
-
+const useSectionFromLang = (sections: {
+  [key in Language]?: React.ReactNode;
+}) => {
+  const userLang = useUserLangSetting();
   if (userLang === 'showAll') {
     return (
       <>
-        {Object.keys(sections).map(lang => (
+        {(Object.keys(sections) as Language[]).map(lang => (
           <div key={lang}>
             <p className="text-lg font-bold">{LANGUAGE_LABELS[lang]}</p>
             {sections[lang]}
@@ -33,8 +24,8 @@ export const LanguageSection: React.FC = props => {
   }
 
   if (!sections.hasOwnProperty(userLang)) {
-    const langs = ['cpp', 'java', 'py'];
-    let fallbackLang = '';
+    const langs = ['cpp', 'java', 'py'] as const;
+    let fallbackLang: Language = 'cpp';
     for (const lang of langs) {
       if (sections.hasOwnProperty(lang)) {
         fallbackLang = lang;
@@ -58,7 +49,7 @@ export const LanguageSection: React.FC = props => {
           target="_blank"
           rel="noreferrer"
         >
-          Github
+          GitHub
         </a>{' '}
         to help add support for {LANGUAGE_LABELS[userLang]} would be
         appreciated!
@@ -75,14 +66,66 @@ export const LanguageSection: React.FC = props => {
   return sections[userLang];
 };
 
-export const CPPSection: React.FC = props => {
+export const LanguageSection = (props: {
+  children?: React.ReactNode;
+}): React.ReactNode => {
+  const sections: { [key in Language]?: React.ReactNode } = {};
+  const typeToLang = {
+    CPPSection: 'cpp',
+    JavaSection: 'java',
+    PySection: 'py',
+  } as const;
+  React.Children.map(props.children, child => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const type = (child as any).type.name as keyof typeof typeToLang;
+    sections[typeToLang[type]] = child;
+  });
+  return useSectionFromLang(sections);
+};
+
+export const CPPOnly = (props: {
+  children?: React.ReactNode;
+}): React.ReactNode => {
+  return useSectionFromLang({
+    cpp: props.children,
+    java: <></>,
+    py: <></>,
+  });
+};
+export const JavaOnly = (props: {
+  children?: React.ReactNode;
+}): React.ReactNode => {
+  return useSectionFromLang({
+    cpp: <></>,
+    java: props.children,
+    py: <></>,
+  });
+};
+
+export const PyOnly = (props: {
+  children?: React.ReactNode;
+}): React.ReactNode => {
+  return useSectionFromLang({
+    cpp: <></>,
+    java: <></>,
+    py: props.children,
+  });
+};
+
+export const CPPSection = (props: {
+  children?: React.ReactNode;
+}): React.ReactNode => {
   return <>{props.children}</>;
 };
 
-export const JavaSection: React.FC = props => {
+export const JavaSection = (props: {
+  children?: React.ReactNode;
+}): React.ReactNode => {
   return <>{props.children}</>;
 };
 
-export const PySection: React.FC = props => {
+export const PySection = (props: {
+  children?: React.ReactNode;
+}): React.ReactNode => {
   return <>{props.children}</>;
 };

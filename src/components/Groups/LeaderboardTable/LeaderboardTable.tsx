@@ -2,28 +2,26 @@ import React from 'react';
 import TextTooltip from '../../Tooltip/TextTooltip';
 
 export interface LeaderboardTableProps {
-  columns:
-    | {
-        id: string;
-        tooltip: string;
-      }[]
-    | null;
-  rows:
-    | {
-        id: string;
-        name: string;
-        points: number;
-        items: {
-          id: string;
-          value: string;
-          payload?: unknown;
-        }[];
-      }[]
-    | null;
+  columns?: {
+    id: string;
+    tooltip: string;
+  }[];
+  rows?: {
+    id: string;
+    name: string;
+    points: number;
+    items: {
+      id: string;
+      value: string;
+      payload?: unknown;
+    }[];
+  }[];
   onCellClick?: (personIndex: number, payload: unknown) => void;
 }
 
-export const LeaderboardTable = (props: LeaderboardTableProps): JSX.Element => {
+export const LeaderboardTable = (
+  props: LeaderboardTableProps
+): JSX.Element | null => {
   const problemCellStyles =
     'w-16 text-center border-l border-gray-200 dark:border-gray-700 px-3';
 
@@ -84,7 +82,7 @@ export const LeaderboardTable = (props: LeaderboardTableProps): JSX.Element => {
                   <td className="text-center border-r border-gray-200 dark:border-gray-700 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 w-16">
                     {idx + 1}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 max-w-[10rem] text-ellipsis overflow-hidden">
                     {person.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">

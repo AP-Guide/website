@@ -3,7 +3,7 @@ id: segtree-ext
 redirects:
   - /plat/seg-ext
 title: 'More Applications of Segment Tree'
-author: Benjamin Qi, Andi Qu
+author: Benjamin Qi, Andi Qu, Justin Ji
 prerequisites:
   - PURS
 description: 'Walking on a Segment Tree, Non-Commutative Combiner Functions'
@@ -12,8 +12,8 @@ frequency: 3
 
 <Resources>
 	<Resource
-		source="CF"
-		title="EDU: Segment Tree Pt 1 Step 2"
+		source="CF EDU"
+		title="Segment Tree Pt 1 Step 2"
 		url="https://codeforces.com/edu/course/2/lesson/4/2"
 		starred
 	>
@@ -44,8 +44,6 @@ $\max(a_1,\ldots,a_i)\ge x$. But try to do this in $\mathcal{O}(\log N)$ time.
 
 ### Solution - Hotel Queries
 
-<Spoiler title="Solution">
-
 Instead of binary searching and querying the segment tree separately, let's do
 them together!
 
@@ -62,6 +60,11 @@ $\max(a_l, \dots, a_{mid}) \geq x$; otherwise, we move to the right child.
 
 This is convenient because $\max(a_l, \dots, a_{mid})$ is already stored in the
 left child, so we can find it in $\mathcal{O}(1)$ time.
+
+**Time Complexity:** $\mathcal{O}(N + Q\log{N})$
+
+<LanguageSection>
+<CPPSection>
 
 ```cpp
 #include <bits/stdc++.h>
@@ -113,7 +116,159 @@ int main() {
 }
 ```
 
-</Spoiler>
+</CPPSection>
+</LanguageSection>
+
+<FocusProblem problem="walkSam2" />
+
+### Solution - Ordered Set
+
+First, we coordinate compress all the values, and keep track of the frequency of each value in the array we build our segment tree on.
+We can answer the
+$\texttt{INSERT}$, $\texttt{DELETE}$, and $\texttt{COUNT}$ queries using
+the sum segment tree from the [PURS](/gold/PURS) module. Answering the
+$\texttt{K-TH}$ queries in $\mathcal{O}(\log{N})$ time requires us to use
+segment tree walking.
+
+Let $\texttt{freq}[i]$ equal the number of times $i$ occurs in our set.
+In our array of coordinate compressed values, we want to find the first
+index $x$ such that $\sum_{i=0}^{x} \texttt{freq}[i]$ is $\geq K$.
+
+In the previous problem, we were walking on the prefix maximum of our array. Here, we are walking on the prefix sum of our array. The difference here is that if we know our answer is in $[l, r]$, then
+checking the maximum in our left and right children is enough to know if we
+should walk left or right. But with sum, we also need to consider the range $[1, l)$ and how it might affect our answer.
+
+To keep track of the prefix $[1, l)$, we first set our prefix result to be a neutral value. By neutral value, we mean the identity of the operation (for addition it's 0, for multiplication it's 1, etc.).
+Every time we walk right, we add the left child's value to our prefix result.
+
+**Time Complexity:** $\mathcal{O}(Q\log{Q})$
+
+<LanguageSection>
+<CPPSection>
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+template <class T> class SumSegmentTree {
+  private:
+	const T DEFAULT = 0;
+
+	int len;
+	vector<T> segtree;
+
+	T combine(const T &a, const T &b) { return a + b; }
+
+	void build(const vector<T> &arr, int at, int at_left, int at_right) {
+		if (at_left == at_right) {
+			segtree[at] = arr[at_left];
+			return;
+		}
+		int mid = (at_left + at_right) / 2;
+		build(arr, 2 * at, at_left, mid);
+		build(arr, 2 * at + 1, mid + 1, at_right);
+		segtree[at] = combine(segtree[2 * at], segtree[2 * at + 1]);
+	}
+
+	void set(int ind, T val, int at, int at_left, int at_right) {
+		if (at_left == at_right) {
+			segtree[at] = val;
+			return;
+		}
+		int mid = (at_left + at_right) / 2;
+		if (ind <= mid) {
+			set(ind, val, 2 * at, at_left, mid);
+		} else {
+			set(ind, val, 2 * at + 1, mid + 1, at_right);
+		}
+		segtree[at] = combine(segtree[2 * at], segtree[2 * at + 1]);
+	}
+
+	T range_sum(int start, int end, int at, int at_left, int at_right) {
+		if (at_right < start || end < at_left) { return DEFAULT; }
+		if (start <= at_left && at_right <= end) { return segtree[at]; }
+		int mid = (at_left + at_right) / 2;
+		T left_res = range_sum(start, end, 2 * at, at_left, mid);
+		T right_res = range_sum(start, end, 2 * at + 1, mid + 1, at_right);
+		return combine(left_res, right_res);
+	}
+
+	int walk(int at, int at_left, int at_right, int max_val, int pref_res) {
+		if (at_left == at_right) { return at_left; }
+		int mid = (at_left + at_right) / 2;
+		int sum_left = pref_res + segtree[2 * at];
+		if (sum_left >= max_val) {
+			return walk(2 * at, at_left, mid, max_val, pref_res);
+		}
+		return walk(2 * at + 1, mid + 1, at_right, max_val, sum_left);
+	}
+
+  public:
+	SumSegmentTree(int len) : len(len) { segtree = vector<T>(len * 4, DEFAULT); };
+
+	SumSegmentTree(const vector<T> &arr) : len(arr.size()) {
+		segtree = vector<T>(len * 4, DEFAULT);
+		build(arr, 1, 0, len - 1);
+	}
+
+	void set(int ind, T val) { set(ind, val, 1, 0, len - 1); }
+
+	T range_sum(int start, int end) { return range_sum(start, end, 1, 0, len - 1); }
+
+	/** @return first i such that the prefix sum up to i >= val */
+	int walk(int val) { return walk(1, 0, len - 1, val, 0); }
+};
+
+int main() {
+	int query_num;
+	cin >> query_num;
+	vector<int> indices;
+	vector<pair<char, int>> updates(query_num);
+	for (int i = 0; i < query_num; i++) {
+		char type;
+		int val;
+		cin >> type >> val;
+		updates[i] = {type, val};
+		indices.push_back(val);
+	}
+
+	sort(begin(indices), end(indices));
+	indices.erase(unique(begin(indices), end(indices)), end(indices));
+
+	/** @return coordinate compressed location of v */
+	const auto id = [&](int v) -> int {
+		return lower_bound(begin(indices), end(indices), v) - begin(indices);
+	};
+
+	vector<int> freq(indices.size());
+	SumSegmentTree<int> st(indices.size());
+	for (const auto [type, val] : updates) {
+		int loc = id(val);
+		if (type == 'I') {
+			if (freq[loc] == 0) {
+				freq[loc] = 1;
+				st.set(loc, 1);
+			}
+		} else if (type == 'D') {
+			if (freq[loc] == 1) {
+				freq[loc] = 0;
+				st.set(loc, 0);
+			}
+		} else if (type == 'K') {
+			if (st.range_sum(0, indices.size() - 1) < val) {
+				cout << "invalid" << '\n';
+			} else {
+				cout << st.walk(val) << '\n';
+			}
+		} else if (type == 'C') {
+			cout << st.range_sum(0, loc - 1) << '\n';
+		}
+	}
+}
+```
+
+</CPPSection>
+</LanguageSection>
 
 ### Problems
 
@@ -137,73 +292,85 @@ two BITs as described
 complicated.
 
 ```cpp
-using T = AR<mi,2>;
-T comb(const T& a, const T& b) { return {a[0]*b[0],a[1]*b[0]+b[1]}; }
+using T = AR<mi, 2>;
+T comb(const T &a, const T &b) { return {a[0] * b[0], a[1] * b[0] + b[1]}; }
 
-template<class T> struct BIT {
-	const T ID = {1,0};
-	int SZ = 1; V<T> x, bit[2];
+template <class T> struct BIT {
+	const T ID = {1, 0};
+	int SZ = 1;
+	V<T> x, bit[2];
 	void init(int N) {
 		while (SZ <= N) SZ *= 2;
-		x = V<T>(SZ+1,ID); F0R(i,2) bit[i] = x;
-		FOR(i,1,N+1) re(x[i]);
+		x = V<T>(SZ + 1, ID);
+		F0R(i, 2) bit[i] = x;
+		FOR(i, 1, N + 1) re(x[i]);
 		build();
 	}
 	void build() {
-		FOR(i,1,SZ) {
-			bit[0][i] = comb(bit[0][i],x[i]);
-			int j = i+(i&-i); assert(j <= SZ);
-			bit[0][j] = comb(bit[0][j],bit[0][i]);
+		FOR(i, 1, SZ) {
+			bit[0][i] = comb(bit[0][i], x[i]);
+			int j = i + (i & -i);
+			assert(j <= SZ);
+			bit[0][j] = comb(bit[0][j], bit[0][i]);
 		}
-		ROF(i,1,SZ) {
-			bit[1][i] = comb(x[i],bit[1][i]);
-			int j = i-(i&-i);
-			bit[1][j] = comb(bit[1][i],bit[1][j]);
+		ROF(i, 1, SZ) {
+			bit[1][i] = comb(x[i], bit[1][i]);
+			int j = i - (i & -i);
+			bit[1][j] = comb(bit[1][i], bit[1][j]);
 		}
 	}
 	void upd0(int p) {
 		T lans = ID, rans = ID;
-		for (int P = p, lo = p-1, hi = p+1; P < SZ; P += P&-P) {
-			for (;hi < P;hi += hi&-hi) rans = comb(rans,bit[1][hi]);
-			for(;lo > P-(P&-P);lo -= lo&-lo) lans = comb(bit[0][lo],lans);
-			assert(lo == P-(P&-P));
-			bit[0][P] = comb(lans,x[p]);
-			if (p != P) bit[0][P] = comb(bit[0][P],comb(rans,x[P]));
+		for (int P = p, lo = p - 1, hi = p + 1; P < SZ; P += P & -P) {
+			for (; hi < P; hi += hi & -hi) rans = comb(rans, bit[1][hi]);
+			for (; lo > P - (P & -P); lo -= lo & -lo) lans = comb(bit[0][lo], lans);
+			assert(lo == P - (P & -P));
+			bit[0][P] = comb(lans, x[p]);
+			if (p != P) bit[0][P] = comb(bit[0][P], comb(rans, x[P]));
 		}
 	}
 	void upd1(int p) {
 		T lans = ID, rans = ID;
-		for (int P = p, lo = p-1, hi = p+1; P; P -= P&-P) {
-			for (;hi < P+(P&-P); hi += hi&-hi) rans = comb(rans,bit[1][hi]);
-			for (;lo > P; lo -= lo&-lo) lans = comb(bit[0][lo],lans);
-			assert(hi == P+(P&-P));
-			bit[1][P] = comb(x[p],rans);
-			if (p != P) bit[1][P] = comb(comb(x[P],lans),bit[1][P]);
+		for (int P = p, lo = p - 1, hi = p + 1; P; P -= P & -P) {
+			for (; hi < P + (P & -P); hi += hi & -hi) rans = comb(rans, bit[1][hi]);
+			for (; lo > P; lo -= lo & -lo) lans = comb(bit[0][lo], lans);
+			assert(hi == P + (P & -P));
+			bit[1][P] = comb(x[p], rans);
+			if (p != P) bit[1][P] = comb(comb(x[P], lans), bit[1][P]);
 		}
 	}
-	void upd(int p, T u) { assert(0 < p && p < SZ);
-		x[p] = u; upd0(p); upd1(p); }
-	T query(int a, int b) { assert(0 < a && a <= b && b < SZ);
+	void upd(int p, T u) {
+		assert(0 < p && p < SZ);
+		x[p] = u;
+		upd0(p);
+		upd1(p);
+	}
+	T query(int a, int b) {
+		assert(0 < a && a <= b && b < SZ);
 		T lans = ID, rans = ID;
-		for (int A; (A = a+(a&-a)) <= b; a = A) lans = comb(lans,bit[1][a]);
-		for (int B; (B = b-(b&-b)) >= a; b = B) rans = comb(bit[0][b],rans);
-		assert(a == b); return comb(comb(lans,x[a]),rans);
+		for (int A; (A = a + (a & -a)) <= b; a = A) lans = comb(lans, bit[1][a]);
+		for (int B; (B = b - (b & -b)) >= a; b = B) rans = comb(bit[0][b], rans);
+		assert(a == b);
+		return comb(comb(lans, x[a]), rans);
 	}
 };
 
 BIT<T> B;
-int N,Q;
+int N, Q;
 
 int main() {
-	setIO(); re(N,Q);
+	setIO();
+	re(N, Q);
 	B.init(N);
-	F0R(i,Q) {
-		int t,p,c,d; re(t,p,c,d); ++p;
+	F0R(i, Q) {
+		int t, p, c, d;
+		re(t, p, c, d);
+		++p;
 		if (t == 0) {
-			B.upd(p,{c,d});
+			B.upd(p, {c, d});
 		} else {
-			T res = B.query(p,c);
-			ps(res[0]*d+res[1]);
+			T res = B.query(p, c);
+			ps(res[0] * d + res[1]);
 		}
 	}
 }
@@ -213,8 +380,6 @@ int main() {
 
 Hint: In each node of the segment tree, you'll need to store four pieces of
 information.
-
-<Spoiler title="Solution">
 
 In each node of the segment tree that stores information about the range
 $[l, r]$ we store the following information:
@@ -245,13 +410,9 @@ const ll MAXN = 200001;
 
 struct Node {
 	ll g_max, l_max, r_max, sum;
-	Node operator +(Node b) {
-		return {
-			max(max(g_max, b.g_max), r_max + b.l_max),
-			max(l_max, sum + b.l_max),
-			max(b.r_max, r_max + b.sum),
-			sum + b.sum
-		};
+	Node operator+(Node b) {
+		return {max(max(g_max, b.g_max), r_max + b.l_max), max(l_max, sum + b.l_max),
+		        max(b.r_max, r_max + b.sum), sum + b.sum};
 	}
 };
 
@@ -294,8 +455,6 @@ int main() {
 	return 0;
 }
 ```
-
-</Spoiler>
 
 ### Problems
 

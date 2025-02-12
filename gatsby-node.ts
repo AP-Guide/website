@@ -1,16 +1,17 @@
-import * as fs from 'fs';
-import importFresh from 'import-fresh';
-import * as path from 'path';
-import { SECTIONS } from './content/ordering';
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import * as freshOrdering from './content/ordering';
+import { typeDefs } from './graphql-types';
+import div_to_probs from './src/components/markdown/ProblemsList/DivisionList/div_to_probs.json';
 import { createXdmNode } from './src/gatsby/create-xdm-node';
 import {
   checkInvalidUsacoMetadata,
   getProblemInfo,
   getProblemURL,
   ProblemMetadata,
+  ShortProblemInfo,
 } from './src/models/problem';
-const { execSync } = require('child_process');
-
 // Questionable hack to get full commit history so that timestamps work
 try {
   execSync(
@@ -24,13 +25,11 @@ try {
 
 // ideally problems would be its own query with
 // source nodes: https://www.gatsbyjs.com/docs/reference/config-files/gatsby-node/#sourceNodes
-
+let stream = fs.createWriteStream('ids.log', { flags: 'a' });
 exports.onCreateNode = async api => {
   const { node, actions, loadNodeContent, createContentDigest, createNodeId } =
     api;
-
   const { createNodeField, createNode, createParentChildLink } = actions;
-
   if (node.internal.type === `File` && node.ext === '.mdx') {
     const content = await loadNodeContent(node);
     const xdmNode = await createXdmNode(
@@ -44,7 +43,6 @@ exports.onCreateNode = async api => {
     createNode(xdmNode);
     createParentChildLink({ parent: node, child: xdmNode });
   }
-
   function transformObject(obj, id) {
     const problemInfoNode = {
       ...obj,
@@ -59,7 +57,6 @@ exports.onCreateNode = async api => {
     createNode(problemInfoNode);
     createParentChildLink({ parent: node, child: problemInfoNode });
   }
-
   const isExtraProblems =
     node.internal.mediaType === 'application/json' &&
     node.sourceInstanceName === 'content' &&
@@ -79,15 +76,15 @@ exports.onCreateNode = async api => {
         : `in node ${node.id}`;
       throw new Error(`Unable to parse JSON: ${hint}`);
     }
-
     const moduleId = parsedContent['MODULE_ID'];
     if (!moduleId && !isExtraProblems) {
       throw new Error(
         'Module ID not found in problem JSON file: ' + node.absolutePath
       );
     }
-
-    const freshOrdering = importFresh<any>('./content/ordering');
+    //const freshOrdering = importFresh<any>(
+    //  path.join(__dirname, './content/ordering.ts')
+    //);
     if (!isExtraProblems && !(moduleId in freshOrdering.moduleIDToSectionMap)) {
       throw new Error(
         '.problems.json moduleId does not correspond to module: ' +
@@ -96,13 +93,12 @@ exports.onCreateNode = async api => {
           node.absolutePath
       );
     }
-
     Object.keys(parsedContent).forEach(tableId => {
       if (tableId === 'MODULE_ID') return;
       try {
         parsedContent[tableId].forEach((metadata: ProblemMetadata) => {
           checkInvalidUsacoMetadata(metadata);
-          const freshOrdering = importFresh<any>('./content/ordering');
+          if (process.env.CI) stream.write(metadata.uniqueId + '\n');
           transformObject(
             {
               ...getProblemInfo(metadata, freshOrdering),
@@ -121,7 +117,6 @@ exports.onCreateNode = async api => {
         throw new Error(e);
       }
     });
-
     if (moduleId) {
       // create a node that contains all of a module's problems
       const id = createNodeId(`${node.id} >>> ModuleProblemLists`);
@@ -130,8 +125,6 @@ exports.onCreateNode = async api => {
         .map(listId => ({
           listId,
           problems: parsedContent[listId].map(x => {
-            const freshOrdering = importFresh<any>('./content/ordering');
-
             return {
               ...getProblemInfo(x, freshOrdering),
             };
@@ -158,8 +151,8 @@ exports.onCreateNode = async api => {
     node.internal.type === 'Xdm' &&
     node.fileAbsolutePath.includes('content')
   ) {
-    const ordering = importFresh<any>('./content/ordering');
-    if (!(node.frontmatter.id in ordering.moduleIDToSectionMap)) {
+    // const ordering = importFresh<any>('./content/ordering.ts');
+    if (!(node.frontmatter.id in freshOrdering.moduleIDToSectionMap)) {
       throw new Error(
         'module id does not show up in ordering: ' +
           node.frontmatter.id +
@@ -170,9 +163,8 @@ exports.onCreateNode = async api => {
     createNodeField({
       name: 'division',
       node,
-      value: ordering.moduleIDToSectionMap[node.frontmatter.id],
+      value: freshOrdering.moduleIDToSectionMap[node.frontmatter.id],
     });
-
     // https://angelos.dev/2019/09/add-support-for-modification-times-in-gatsby/
     const gitAuthorTime = execSync(
       `git log -1 --pretty=format:%aI ${node.fileAbsolutePath}`
@@ -187,28 +179,25 @@ exports.onCreateNode = async api => {
 
 exports.createPages = async ({ graphql, actions, reporter }) => {
   const { createPage, createRedirect } = actions;
-  fs.readFile('./src/redirects.txt', (err, data) => {
-    if (err) throw new Error('error: ' + err);
-    (data + '')
-      .split('\n')
-      .filter(line => line.charAt(0) !== '#')
-      .map(line => {
-        const tokens = line.split('\t');
-        return {
-          from: tokens[0],
-          to: tokens[1],
-        };
-      })
-      .forEach(({ from, to }) => {
-        createRedirect({
-          fromPath: from,
-          toPath: to,
-          redirectInBrowser: true,
-          isPermanent: true,
-        });
+  const redirectsData = fs.readFileSync('./src/redirects.txt');
+  (redirectsData + '')
+    .split('\n')
+    .filter(line => line != '')
+    .filter(line => line.charAt(0) !== '#')
+    .map(line => {
+      const tokens = line.split('\t');
+      return {
+        from: tokens[0],
+        to: tokens[1],
+      };
+    })
+    .forEach(({ from, to }) => {
+      createRedirect({
+        fromPath: from,
+        toPath: to,
+        isPermanent: true,
       });
-  });
-
+    });
   const result = await graphql(`
     query {
       modules: allXdm(filter: { fileAbsolutePath: { regex: "/content/" } }) {
@@ -226,7 +215,6 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
           }
         }
       }
-
       solutions: allXdm(
         filter: { fileAbsolutePath: { regex: "/solutions/" } }
       ) {
@@ -240,7 +228,6 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
           }
         }
       }
-
       problems: allProblemInfo {
         edges {
           node {
@@ -255,6 +242,7 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
               labelTooltip
               sketch
               url
+              hasHints
             }
             difficulty
             module {
@@ -271,13 +259,17 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
   if (result.errors) {
     reporter.panicOnBuild('🚨 ERROR: Loading "createPages" query');
   }
-
   // Check to make sure problems with the same unique ID have consistent information, and that there aren't duplicate slugs
+  // Also creates user solution pages for each problem
   const problems = result.data.problems.edges;
   let problemSlugs = {}; // maps slug to problem unique ID
   let problemInfo = {}; // maps unique problem ID to problem info
   let problemURLToUniqueID = {}; // maps problem URL to problem unique ID
   let urlsThatCanHaveMultipleUniqueIDs = ['https://cses.fi/107/list/'];
+  const userSolutionTemplate = path.resolve(
+    `./src/templates/userSolutionTemplate.tsx`
+  );
+  let usaco_uids: string[] = [];
   problems.forEach(({ node }) => {
     let slug = getProblemURL(node);
     if (
@@ -323,18 +315,54 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
         }. Is this correct? (If this is correct, add the URL to \`urlsThatCanHaveMultipleUniqueIDs\` in gatsby-node.ts)`
       );
     }
+
+    // skipping usaco problems to be created with div_to_probs
+    if (node.uniqueId.startsWith('usaco')) {
+      usaco_uids.push(node.uniqueId);
+    }
     problemSlugs[slug] = node.uniqueId;
     problemInfo[node.uniqueId] = node;
     problemURLToUniqueID[node.url] = node.uniqueId;
+    const path = `problems/${node.uniqueId}/user-solutions`;
+    const problem = node as ShortProblemInfo;
+    createPage({
+      path: path,
+      component: userSolutionTemplate,
+      context: {
+        problem: problem,
+        id: problem.uniqueId,
+      },
+    });
   });
-  // End problems check
+  const divisions = ['Bronze', 'Silver', 'Gold', 'Platinum'];
+  divisions.forEach(division => {
+    div_to_probs[division].forEach(problem => {
+      const uniqueId = 'usaco-' + problem[0];
+      const name = problem[2];
+      const path = `problems/${uniqueId}/user-solutions`;
 
-  const moduleTemplate = require.resolve(`./src/templates/moduleTemplate.tsx`);
+      if (!usaco_uids.includes(uniqueId)) {
+        createPage({
+          path: path,
+          component: userSolutionTemplate,
+          context: {
+            problem: {
+              uniqueId: uniqueId,
+              name: name,
+            },
+            id: uniqueId,
+          },
+        });
+      }
+    });
+  });
+
+  // End problems check
+  const moduleTemplate = path.resolve(`./src/templates/moduleTemplate.tsx`);
   const modules = result.data.modules.edges;
   modules.forEach(({ node }) => {
     if (!node.fields?.division) return;
     const path = `/${node.fields.division}/${node.frontmatter.id}`;
-
     if (node.frontmatter.redirects) {
       node.frontmatter.redirects.forEach(fromPath => {
         createRedirect({
@@ -345,7 +373,6 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
         });
       });
     }
-
     createPage({
       path,
       component: moduleTemplate,
@@ -354,7 +381,9 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
       },
     });
 
-    const freshOrdering = importFresh<any>('./content/ordering');
+    // const freshOrdering = importFresh<any>(
+    //   path.join(__dirname, './content/ordering.ts')
+    // );
     if (node.frontmatter.prerequisites)
       for (const prereq of node.frontmatter.prerequisites) {
         if (!(prereq in freshOrdering.moduleIDToSectionMap)) {
@@ -368,16 +397,16 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
         }
       }
   });
-  const solutionTemplate = require.resolve(
-    `./src/templates/solutionTemplate.tsx`
-  );
+  const solutionTemplate = path.resolve(`./src/templates/solutionTemplate.tsx`);
   const solutions = result.data.solutions.edges;
+  const problemsWithInternalSolutions = new Set<string>();
   solutions.forEach(({ node }) => {
     try {
       // we want to find all problems that this solution can be an internal solution for
       const problemsForThisSolution = problems.filter(
         ({ node: problemNode }) => problemNode.uniqueId === node.frontmatter.id
       );
+      problemsWithInternalSolutions.add(node.frontmatter.id);
       if (problemsForThisSolution.length === 0) {
         throw new Error(
           "Couldn't find corresponding problem for internal solution with frontmatter ID " +
@@ -418,7 +447,6 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
           createRedirect({
             fromPath,
             toPath: path,
-            redirectInBrowser: true,
             isPermanent: true,
           });
         });
@@ -437,12 +465,26 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
       throw e;
     }
   });
-
+  let hasProblemMissingInternalSolution = false;
+  problems
+    .filter(x => x.node.solution?.kind === 'internal')
+    .forEach(({ node: problemNode }) => {
+      if (!problemsWithInternalSolutions.has(problemNode.uniqueId)) {
+        hasProblemMissingInternalSolution = true;
+        reporter.error(
+          `Problem ${problemNode.uniqueId} claims to have an internal solution but doesn't`
+        );
+      }
+    });
+  if (hasProblemMissingInternalSolution) {
+    // Without this, gatsby build will hang indefinitely for unclear reasons.
+    // My best guess is the multiprocessing Gatsby does fails to exit cleanly.
+    // However, somehow sending SIGINT to this process exits fine.
+    process.kill(process.pid, 'SIGINT');
+  }
   // Generate Syllabus Pages //
-  const syllabusTemplate = require.resolve(
-    `./src/templates/syllabusTemplate.tsx`
-  );
-  SECTIONS.forEach(division => {
+  const syllabusTemplate = path.resolve(`./src/templates/syllabusTemplate.tsx`);
+  freshOrdering.SECTIONS.forEach(division => {
     createPage({
       path: `/${division}`,
       component: syllabusTemplate,
@@ -456,89 +498,14 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
 
 exports.createSchemaCustomization = ({ actions }) => {
   const { createTypes } = actions;
-  const typeDefs = `
-    type Xdm implements Node {
-      body: String
-      fileAbsolutePath: String
-      frontmatter: XdmFrontmatter
-      isIncomplete: Boolean
-      toc: TableOfContents
-      mdast: String
-    }
-  
-    type XdmFrontmatter implements Node {
-      id: String
-      title: String
-      author: String
-      contributors: String
-      description: String
-      prerequisites: [String]
-      redirects: [String]
-      frequency: Int
-    }
-    
-    type Heading {
-      depth: Int
-      value: String
-      slug: String
-    }
-    
-    type TableOfContents {
-      cpp: [Heading]
-      java: [Heading]
-      py: [Heading]
-    }
-    
-    type ModuleProblemLists implements Node {
-      moduleId: String
-      problemLists: [ModuleProblemList]
-    }
-    
-    type ModuleProblemList {
-      listId: String!
-      problems: [ModuleProblemInfo]
-    }
-    
-    type ProblemInfo implements Node {
-      uniqueId: String!
-      name: String!
-      url: String!
-      source: String!
-      isStarred: Boolean!
-      difficulty: String
-      tags: [String]
-      solution: ProblemSolutionInfo
-      inModule: Boolean!
-      module: Xdm @link(by: "frontmatter.id")
-    }
-    
-    type ModuleProblemInfo {
-      uniqueId: String!
-      name: String!
-      url: String!
-      source: String!
-      isStarred: Boolean!
-      difficulty: String
-      tags: [String]
-      solution: ProblemSolutionInfo
-    }
-    
-    type ProblemSolutionInfo {
-      kind: String!
-      label: String
-      labelTooltip: String
-      url: String
-      sketch: String
-    }
-  `;
   createTypes(typeDefs);
 };
-
+const FilterWarningsPlugin = require('webpack-filter-warnings-plugin');
 exports.onCreateWebpackConfig = ({ actions, stage, loaders, plugins }) => {
   actions.setWebpackConfig({
     resolve: {
       alias: {
-        path: require.resolve('path-browserify'),
+        path: path.resolve('path-browserify'),
       },
       fallback: {
         fs: false,
@@ -558,6 +525,12 @@ exports.onCreateWebpackConfig = ({ actions, stage, loaders, plugins }) => {
         },
       ],
     },
+    // plugins: [
+    //   new FilterWarningsPlugin({
+    //     exclude:
+    //       /mini-css-extract-plugin[^]*Conflicting order. Following module has been added:/,
+    //   }),
+    // ],
   });
   if (stage === 'build-javascript' || stage === 'develop') {
     actions.setWebpackConfig({

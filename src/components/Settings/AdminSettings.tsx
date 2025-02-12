@@ -1,7 +1,6 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import React from 'react';
 import toast from 'react-hot-toast';
-import { unstable_batchedUpdates } from 'react-dom';
 import {
   UserPermissionInformation,
   UserPermissions,
@@ -44,10 +43,8 @@ export default function AdminSettings() {
         toast.error('The user with email ' + email + ' could not be found.');
       } else {
         console.log('Got user: ', response.data.users[0]);
-        unstable_batchedUpdates(() => {
-          setUserData(response.data.users[0]);
-          setUserPermissions(response.data.users[0].customClaims);
-        });
+        setUserData(response.data.users[0]);
+        setUserPermissions(response.data.users[0].customClaims);
       }
     } catch (e) {
       toast.error(e.message);
@@ -59,7 +56,7 @@ export default function AdminSettings() {
   const handleUpdateUserPermissions = async e => {
     e.preventDefault();
 
-    if (!userData.customClaims?.isAdmin && userPermissions.isAdmin) {
+    if (!userData.customClaims?.isAdmin && userPermissions?.isAdmin) {
       if (
         !confirm(
           'Are you sure you want to grant this user admin permissions? This will give the user complete control over the database!'

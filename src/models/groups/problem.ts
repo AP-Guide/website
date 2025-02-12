@@ -15,7 +15,7 @@ export interface ProblemData {
 export type GroupProblemData = ProblemData &
   (
     | {
-        usacoGuideId: string;
+        usacoGuideId: string | null;
         solutionReleaseMode: 'due-date' | 'now' | 'never';
       }
     | {
@@ -81,16 +81,27 @@ export type ExecutionVerdict =
   | 'CE'
   | 'IE'; // IE is internal error
 
-export interface FirebaseSubmission {
-  language: string;
-  problemID: string;
-  score: number;
-  submissionID: string;
-  userID: string;
-  type: string;
-  verdict: string;
-  timestamp: any; // milliseconds
-}
+export type FirebaseSubmission =
+  | {
+      id?: string;
+      language: string;
+      problemID: string;
+      score: number;
+      submissionID: string;
+      userID: string;
+      type: string;
+      verdict: string;
+      timestamp: any; // milliseconds
+    }
+  | {
+      id?: string;
+      score: number;
+      userID: string;
+      type: 'submission-link';
+      verdict: string;
+      timestamp: any;
+      link: string;
+    };
 
 export const verdictToSymbol: { [key in ExecutionVerdict]: string } = {
   AC: '*',

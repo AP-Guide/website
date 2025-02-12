@@ -1,11 +1,15 @@
 import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
-import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+import {
+  connectFirestoreEmulator,
+  getFirestore,
+  initializeFirestore,
+} from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 import * as React from 'react';
 import { createContext } from 'react';
 
-export const FirebaseAppContext = createContext<FirebaseApp>(null);
+export const FirebaseAppContext = createContext<FirebaseApp | null>(null);
 const firebaseConfig = {
   apiKey: 'AIzaSyAvm-cvPgEFer3MVQtCiKegFTc1E9RHGG4',
   authDomain: 'usaco-guide.firebaseapp.com',
@@ -17,13 +21,21 @@ const firebaseConfig = {
 };
 
 export const FirebaseProvider = ({ children }) => {
-  const [firebaseApp, setFirebaseApp] = React.useState<FirebaseApp>(null);
+  const [firebaseApp, setFirebaseApp] = React.useState<FirebaseApp | null>(
+    null
+  );
 
   React.useEffect(() => {
     if (!firebaseApp && typeof window !== 'undefined') {
       const firebaseApp =
         getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
       setFirebaseApp(firebaseApp);
+      if (localStorage.getItem('USACO_GUIDE_LONG_POLLING') === 'true') {
+        // console.log('Initializing long polling');
+        initializeFirestore(firebaseApp, {
+          experimentalForceLongPolling: true,
+        });
+      }
 
       const shouldUseEmulator = false;
       if (shouldUseEmulator) {

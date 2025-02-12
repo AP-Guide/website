@@ -1,18 +1,21 @@
 import { navigate } from 'gatsby';
 import * as React from 'react';
-import { useContext } from 'react';
-import UserDataContext from '../../../context/UserDataContext/UserDataContext';
+import {
+  useFirebaseUser,
+  useIsUserDataLoaded,
+} from '../../../context/UserDataContext/UserDataContext';
 import { useUserPermissions } from '../../../context/UserDataContext/UserPermissionsContext';
 import { useGroupActions } from '../../../hooks/groups/useGroupActions';
 import { useUserGroups } from '../../../hooks/groups/useUserGroups';
+import TopNavigationBar from '../../TopNavigationBar/TopNavigationBar';
 import Layout from '../../layout';
 import SEO from '../../seo';
-import TopNavigationBar from '../../TopNavigationBar/TopNavigationBar';
 import AdminViewAllGroups from './AdminViewAllGroups';
 import { GroupCard } from './GroupCard';
 
-const GroupSelectPage = (props: { path: string }) => {
-  const { firebaseUser, isLoaded } = useContext(UserDataContext);
+const GroupSelectPage = () => {
+  const firebaseUser = useFirebaseUser();
+  const isLoaded = useIsUserDataLoaded();
   const groups = useUserGroups();
   const { createNewGroup } = useGroupActions();
   const permissions = useUserPermissions();
@@ -34,20 +37,11 @@ const GroupSelectPage = (props: { path: string }) => {
         <div className="max-w-3xl px-4 lg:px-8 mx-auto py-16">
           <div className="flex items-center justify-between">
             <h1 className="text-xl md:text-3xl font-bold">My Groups</h1>
-            {permissions.canCreateGroups ? (
+            {!showLoading && !showNotSignedInMessage ? (
               <button className="btn" onClick={handleCreateNewGroup}>
                 Create New Group
               </button>
-            ) : (
-              <a
-                className="btn"
-                href="https://docs.google.com/forms/d/e/1FAIpQLSemoYwALeum82x_emoZcliKgTiAjHJdJJVKJTkHIWgxp5NPag/viewform"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Request Access to Create Groups
-              </a>
-            )}
+            ) : null}
           </div>
           <hr className="mt-6 mb-8 dark:border-gray-700" />
           {showNotSignedInMessage && (
@@ -64,10 +58,10 @@ const GroupSelectPage = (props: { path: string }) => {
             </div>
           )}
           {groups.isSuccess &&
-            (groups.data?.length > 0 ? (
-              groups.data.map(group => (
-                <GroupCard key={group.id} group={group} />
-              ))
+            (groups.data && groups.data.length > 0 ? (
+              groups.data.map(
+                group => group && <GroupCard key={group.id} group={group} />
+              )
             ) : (
               <div>
                 <p>

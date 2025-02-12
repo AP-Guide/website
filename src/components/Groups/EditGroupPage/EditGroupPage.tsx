@@ -1,14 +1,13 @@
 import { Link, navigate } from 'gatsby';
-import React from 'react';
-import { useReducer } from 'react';
+import React, { useReducer } from 'react';
+import toast from 'react-hot-toast';
 import { useActiveGroup } from '../../../hooks/groups/useActiveGroup';
 import { useGroupActions } from '../../../hooks/groups/useGroupActions';
 import { GroupData } from '../../../models/groups/groups';
+import TopNavigationBar from '../../TopNavigationBar/TopNavigationBar';
 import Layout from '../../layout';
 import SEO from '../../seo';
-import TopNavigationBar from '../../TopNavigationBar/TopNavigationBar';
 import Breadcrumbs from '../Breadcrumbs';
-import toast from 'react-hot-toast';
 
 export default function EditGroupPage(props) {
   const { groupId } = props as {
@@ -18,7 +17,7 @@ export default function EditGroupPage(props) {
   const activeGroup = useActiveGroup();
   const originalGroup = activeGroup?.groupData;
   const [group, editGroup] = useReducer(
-    (old, updates: Partial<GroupData>): GroupData => ({
+    (old, updates: Partial<GroupData>): GroupData | undefined => ({
       ...old,
       ...updates,
     }),
@@ -51,7 +50,7 @@ export default function EditGroupPage(props) {
       <nav className="flex mt-6 mb-4" aria-label="Breadcrumb">
         <Breadcrumbs
           className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4"
-          group={activeGroup.groupData}
+          group={activeGroup.groupData!}
         />
       </nav>
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,9 +64,6 @@ export default function EditGroupPage(props) {
             <Link to="../" className="btn">
               <span>Back</span>
             </Link>
-            <button type="submit" onClick={handleSave} className="btn">
-              Save
-            </button>
           </div>
         </div>
         <div className="h-6" />

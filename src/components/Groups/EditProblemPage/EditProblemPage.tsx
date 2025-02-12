@@ -1,17 +1,19 @@
 import { CheckIcon, XIcon } from '@heroicons/react/solid';
+import { RouteComponentProps } from '@reach/router';
 import {
+  Timestamp,
   collection,
   getDocs,
   getFirestore,
   limit,
   query,
-  Timestamp,
 } from 'firebase/firestore';
 import 'flatpickr/dist/themes/material_blue.css';
 import { Link, navigate } from 'gatsby';
 import * as React from 'react';
 import { useReducer } from 'react';
 import Flatpickr from 'react-flatpickr';
+import toast from 'react-hot-toast';
 import { useActiveGroup } from '../../../hooks/groups/useActiveGroup';
 import { usePost } from '../../../hooks/groups/usePost';
 import { usePostActions } from '../../../hooks/groups/usePostActions';
@@ -20,30 +22,33 @@ import { useFirebaseApp } from '../../../hooks/useFirebase';
 import { GroupProblemData } from '../../../models/groups/problem';
 import {
   AlgoliaProblemInfo,
-  getProblemURL,
   ProblemInfo,
+  getProblemURL,
 } from '../../../models/problem';
 import ButtonGroup from '../../ButtonGroup';
-import Layout from '../../layout';
 import ProblemAutocompleteModal from '../../ProblemAutocompleteModal/ProblemAutocompleteModal';
-import SEO from '../../seo';
 import TopNavigationBar from '../../TopNavigationBar/TopNavigationBar';
+import Layout from '../../layout';
+import SEO from '../../seo';
 import Breadcrumbs from '../Breadcrumbs';
 import MarkdownEditor from '../MarkdownEditor';
 import EditProblemHintSection from './EditProblemHintSection';
-import toast from 'react-hot-toast';
 
-export default function EditProblemPage(props) {
-  const { groupId, postId, problemId } = props as {
-    path: string;
-    use;
-    groupId: string;
-    postId: string;
-    problemId: string;
-  };
+type Props = RouteComponentProps<{
+  groupId: string;
+  postId: string;
+  problemId: string;
+}>;
+
+export default function EditProblemPage(props: Props) {
+  const { groupId, postId, problemId } = props;
+  if (!groupId || !postId || !problemId) {
+    throw 'Misplaced EditProblemPage component! This should be under the param URL with :groupId, :postId, and :problemId';
+  }
   const firebaseApp = useFirebaseApp();
   const activeGroup = useActiveGroup();
   const post = usePost(postId);
+  if (!post) throw new Error('Post not found');
   const originalProblem = useProblem(problemId);
   const [problem, editProblem] = useReducer(
     (oldProblem, updates: Partial<GroupProblemData>): GroupProblemData => ({
@@ -144,7 +149,7 @@ export default function EditProblemPage(props) {
       <nav className="flex mt-6 mb-4" aria-label="Breadcrumb">
         <Breadcrumbs
           className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4"
-          group={activeGroup.groupData}
+          group={activeGroup.groupData!}
           post={post}
         />
       </nav>

@@ -4,14 +4,14 @@ import { Link, navigate } from 'gatsby';
 import * as React from 'react';
 import { useReducer } from 'react';
 import Flatpickr from 'react-flatpickr';
+import toast from 'react-hot-toast';
 import { useActiveGroup } from '../../../hooks/groups/useActiveGroup';
 import { usePost } from '../../../hooks/groups/usePost';
 import { usePostActions } from '../../../hooks/groups/usePostActions';
-import toast from 'react-hot-toast';
 import { PostData } from '../../../models/groups/posts';
+import TopNavigationBar from '../../TopNavigationBar/TopNavigationBar';
 import Layout from '../../layout';
 import SEO from '../../seo';
-import TopNavigationBar from '../../TopNavigationBar/TopNavigationBar';
 import Breadcrumbs from '../Breadcrumbs';
 import MarkdownEditor from '../MarkdownEditor';
 
@@ -24,7 +24,7 @@ export default function EditPostPage(props) {
   const activeGroup = useActiveGroup();
   const originalPost = usePost(postId);
   const [post, editPost] = useReducer(
-    (oldPost, updates: Partial<PostData>): PostData => ({
+    (oldPost, updates: Partial<PostData>): PostData | null => ({
       ...oldPost,
       ...updates,
     }),
@@ -55,12 +55,12 @@ export default function EditPostPage(props) {
 
   return (
     <Layout>
-      <SEO title={`Edit ${post.name} · ${activeGroup.groupData.name}`} />
+      <SEO title={`Edit ${post.name} · ${activeGroup.groupData!.name}`} />
       <TopNavigationBar />
       <nav className="flex mt-6 mb-4" aria-label="Breadcrumb">
         <Breadcrumbs
           className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4"
-          group={activeGroup.groupData}
+          group={activeGroup.groupData!}
           post={post}
         />
       </nav>
@@ -76,13 +76,6 @@ export default function EditPostPage(props) {
             <Link to="../" className="btn">
               <span>Back</span>
             </Link>
-            <button
-              type="submit"
-              onClick={() => updatePost(post.id, post).then(() => navigate(-1))}
-              className="btn"
-            >
-              Save
-            </button>
           </div>
         </div>
         <div className="h-6" />
@@ -115,7 +108,7 @@ export default function EditPostPage(props) {
 
                 <div className="mt-1">
                   <Flatpickr
-                    placeholder={'Choose a due date'}
+                    placeholder={'Choose a post date'}
                     options={{
                       dateFormat:
                         'Posted On'.split('').join('\\\\') +
@@ -134,7 +127,9 @@ export default function EditPostPage(props) {
                     value={post.timestamp?.toDate()}
                     onChange={date =>
                       editPost({
-                        timestamp: Timestamp.fromDate(date[0]),
+                        timestamp: date[0]
+                          ? Timestamp.fromDate(date[0])
+                          : undefined,
                       })
                     }
                     className="input"
@@ -164,6 +159,7 @@ export default function EditPostPage(props) {
                             ).split(''),
                           ].join('\\\\'),
                         enableTime: true,
+                        minDate: post.timestamp?.toDate(),
                       }}
                       value={post.dueTimestamp?.toDate()}
                       onChange={date =>
@@ -200,7 +196,7 @@ export default function EditPostPage(props) {
                 type="button"
                 onClick={() => {
                   if (confirm('Are you sure you want to delete this post?')) {
-                    deletePost(post.id)
+                    deletePost(post.id!)
                       .then(() =>
                         navigate(`/groups/${groupId}`, { replace: true })
                       )
@@ -214,7 +210,7 @@ export default function EditPostPage(props) {
               <button
                 type="button"
                 onClick={() =>
-                  updatePost(post.id, post).then(() => navigate(-1))
+                  updatePost(post.id!, post).then(() => navigate(-1))
                 }
                 className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-dark-surface focus:ring-blue-500"
               >

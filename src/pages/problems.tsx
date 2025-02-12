@@ -1,38 +1,114 @@
-import { PageProps } from 'gatsby';
-import * as React from 'react';
+import { graphql, PageProps } from 'gatsby';
+import React from 'react';
+import { Chapter } from '../../content/ordering';
+
 import {
-  connectHits,
-  connectRefinementList,
-  connectSearchBox,
+  HitsPerPage,
   InstantSearch,
+  Pagination,
   PoweredBy,
-} from 'react-instantsearch-dom';
+} from 'react-instantsearch';
+
+import SECTIONS from '../../content/ordering';
 import Layout from '../components/layout';
 import ProblemHits from '../components/ProblemsPage/ProblemHits';
-import RefinementList from '../components/ProblemsPage/RefinementList';
 import SearchBox from '../components/ProblemsPage/SearchBox';
-import Difficulty from '../components/ProblemsPage/Difficulty';
-import Starred from '../components/ProblemsPage/Starred';
+import Selection, {
+  SelectionProps,
+} from '../components/ProblemsPage/Selection';
+import TagsRefinementList from '../components/ProblemsPage/TagsRefinementList';
 import SEO from '../components/seo';
 import TopNavigationBar from '../components/TopNavigationBar/TopNavigationBar';
+import { useUserProgressOnProblems } from '../context/UserDataContext/properties/userProgress';
 import { searchClient } from '../utils/algoliaSearchClient';
-import Section from '../components/ProblemsPage/Section';
-import Status from '../components/ProblemsPage/Status';
-import Modules from '../components/ProblemsPage/Module';
 
-const indexName =
-  process.env.NODE_ENV === 'production' ? 'prod_problems' : 'dev_problems';
+const indexName = `${process.env.GATSBY_ALGOLIA_INDEX_NAME ?? 'dev'}_problems`;
 
-const CustomModuleSelection = connectRefinementList(Modules);
-const CustomDifficultySelection = connectRefinementList(Difficulty);
-const CustomStarredSelection = connectRefinementList(Starred);
-const CustomSectionSelection = connectRefinementList(Section);
-const CustomStatusSelection = connectRefinementList(Status);
-const CustomSearchBox = connectSearchBox(SearchBox);
-const CustomHits = connectHits(ProblemHits);
-const CustomRefinementList = connectRefinementList(RefinementList);
+type DataProps = {
+  allProblemInfo: {
+    nodes: {
+      uniqueId: string;
+    }[];
+  };
+};
 
-export default function ProblemsPage(props: PageProps) {
+export default function ProblemsPage(props: PageProps<DataProps>) {
+  const {
+    allProblemInfo: { nodes: problems },
+  } = props.data;
+  const problemIds = problems.map(problem => problem.uniqueId);
+  const userProgress = useUserProgressOnProblems();
+  const selectionMetadata: SelectionProps[] = [
+    {
+      attribute: 'difficulty',
+      limit: 500,
+      placeholder: 'Difficulty',
+      searchable: false,
+      isMulti: true,
+    },
+    {
+      attribute: 'problemModules.title',
+      limit: 500,
+      placeholder: 'Modules',
+      searchable: true,
+      isMulti: true,
+    },
+    {
+      attribute: 'source',
+      limit: 500,
+      placeholder: 'Source',
+      searchable: true,
+      isMulti: true,
+    },
+    {
+      attribute: 'isStarred',
+      limit: 500,
+      placeholder: 'Starred',
+      searchable: false,
+      transformLabel: label => (label == 'true' ? 'Yes' : 'No'),
+      isMulti: false,
+    },
+    {
+      attribute: 'problemModules.id',
+      limit: 500,
+      placeholder: 'Section',
+      searchable: false,
+      isMulti: true,
+      items: (
+        [
+          ['General', SECTIONS.general],
+          ['Bronze', SECTIONS.bronze],
+          ['Silver', SECTIONS.silver],
+          ['Gold', SECTIONS.gold],
+          ['Platinum', SECTIONS.plat],
+          ['Advanced', SECTIONS.adv],
+        ] as unknown as [string, Chapter[]][]
+      ).map(([section, chapters]) => ({
+        label: section,
+        value: chapters.map(chapter => chapter.items).flat(),
+      })),
+    },
+    {
+      attribute: 'objectID',
+      limit: 500,
+      placeholder: 'Status',
+      searchable: false,
+      isMulti: true,
+      items: [
+        'Not Attempted',
+        'Solving',
+        'Reviewing',
+        'Skipped',
+        'Ignored',
+        'Solved',
+      ].map(label => ({
+        label,
+        value: problemIds.filter(
+          id => (userProgress[id] ?? 'Not Attempted') == label
+        ),
+      })),
+    },
+  ];
   return (
     <Layout>
       <SEO title="All Problems" />
@@ -44,9 +120,9 @@ export default function ProblemsPage(props: PageProps) {
           <div className="py-16 bg-blue-600 dark:bg-blue-900 px-5">
             <div className="max-w-3xl mx-auto mb-6">
               <h1 className="text-center text-3xl sm:text-5xl font-bold text-white dark:text-dark-high-emphasis mb-6">
-                Problems (Beta)
+                Problems
               </h1>
-              <CustomSearchBox />
+              <SearchBox />
             </div>
           </div>
           <div className="flex mt-4 mb-1 mx-9 justify-center">
@@ -54,47 +130,31 @@ export default function ProblemsPage(props: PageProps) {
           </div>
           <div className="pt-3 px-9 pb-4 grid grid-cols-10">
             <div className="sm:col-span-4 md:col-span-3 lg:col-span-2 xl:col-span-2 col-span-5 overflow-y-auto">
-              <CustomRefinementList attribute="tags" limit={500} searchable />
+              <TagsRefinementList />
             </div>
-            <div className="py-0.5 px-1 sm:col-span-6 md:col-span-7 lg:col-span-8 xl:col-span-8 col-span-5 overflow-y-auto">
-              <div className="flex mb-4 items-center grid grid-cols-2 lg:grid-cols-6 md:gird-cols-3 sm:gird-cols-3 gap-x-5 gap-y-3">
-                <div className="col-span-2">
-                  <CustomDifficultySelection
-                    attribute="difficulty"
-                    limit={500}
-                    searchable
-                  />
-                </div>
-                <div className="col-span-2 md:col-span-3 lg:col-span-4 tw-forms-disable-all-descendants">
-                  <CustomModuleSelection
-                    attribute="problemModules.title"
-                    limit={500}
-                    searchable
-                  />
-                </div>
-                <div className="col-span-2 md:col-span-1 lg:col-span-2">
-                  <CustomStarredSelection
-                    attribute="isStarred"
-                    limit={500}
-                    searchable
-                  />
-                </div>
-                <div className="col-span-2">
-                  <CustomSectionSelection
-                    attribute="problemModules.id"
-                    limit={500}
-                    searchable
-                  />
-                </div>
-                <div className="col-span-2 md:col-span-2">
-                  <CustomStatusSelection
-                    attribute="objectID"
-                    limit={500}
-                    searchable
-                  />
-                </div>
+            <div className="py-0.5 px-1 sm:col-span-6 md:col-span-7 lg:col-span-8 xl:col-span-8 col-span-5">
+              <div className="mb-5 items-center grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-x-5 gap-y-3">
+                {selectionMetadata.map(props => (
+                  <div
+                    className="sm:col-span-3 col-span-2 md:col-span-1 lg:col-span-2 tw-forms-disable-all-descendants"
+                    key={props.attribute}
+                  >
+                    <Selection {...props} />
+                  </div>
+                ))}
               </div>
-              <CustomHits />
+              <ProblemHits />
+              <div className="mt-3 flex flex-wrap justify-center">
+                <Pagination showLast={true} className="pr-4" />
+                <HitsPerPage
+                  items={[
+                    { label: '24 hits per page', value: 24, default: true },
+                    { label: '32 hits per page', value: 32 },
+                    { label: '48 hits per page', value: 48 },
+                  ]}
+                  className="mt-1 lg:mt-0"
+                />
+              </div>
             </div>
           </div>
         </InstantSearch>
@@ -102,3 +162,13 @@ export default function ProblemsPage(props: PageProps) {
     </Layout>
   );
 }
+
+export const pageQuery = graphql`
+  query {
+    allProblemInfo {
+      nodes {
+        uniqueId
+      }
+    }
+  }
+`;

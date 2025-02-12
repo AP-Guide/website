@@ -37,37 +37,39 @@ export default function TrustedBy() {
     <div className="max-w-4xl">
       <dl className="rounded-lg sm:grid sm:grid-cols-3">
         <div className="flex flex-col py-2 sm:p-0">
-          <dt className="order-2 text-lg leading-6 font-medium text-gray-400">
+          <dt className="order-2 text-lg leading-6 font-medium text-gray-600 dark:text-gray-400">
             Registered Users
           </dt>
           <dd
-            className={`order-1 text-4xl sm:text-5xl leading-normal sm:leading-normal font-extrabold text-blue-300 ${
+            className={`order-1 text-4xl sm:text-5xl leading-normal sm:leading-normal font-extrabold text-blue-500 ${
               numUsers === -1 ? 'opacity-0' : 'opacity-100'
             } transition`}
-            title={numUsers !== -1 ? `${numUsers} registered users` : null}
+            title={numUsers !== -1 ? `${numUsers} registered users` : undefined}
           >
             {usersText}
           </dd>
         </div>
         <div className="flex flex-col py-2 sm:p-0">
-          <dt className="order-2 text-lg leading-6 font-medium text-gray-400">
+          <dt className="order-2 text-lg leading-6 font-medium text-gray-600 dark:text-gray-400">
             Pageviews
           </dt>
           <dd
-            className={`order-1 text-4xl sm:text-5xl leading-normal sm:leading-normal font-extrabold text-blue-300 ${
+            className={`order-1 text-4xl sm:text-5xl leading-normal sm:leading-normal font-extrabold text-blue-500 ${
               numPageviews === -1 ? 'opacity-0' : 'opacity-100'
             } transition`}
-            title={numPageviews !== -1 ? `${numPageviews} pageviews` : null}
+            title={
+              numPageviews !== -1 ? `${numPageviews} pageviews` : undefined
+            }
           >
             {pageviewsText}
           </dd>
         </div>
         <div className="flex flex-col py-2 sm:p-0">
-          <dt className="order-2 text-lg leading-6 font-medium text-gray-400">
-            Github Stars
+          <dt className="order-2 text-lg leading-6 font-medium text-gray-600 dark:text-gray-400">
+            GitHub Stars
           </dt>
           <dd
-            className={`order-1 text-4xl sm:text-5xl leading-normal sm:leading-normal font-extrabold text-blue-300 ${
+            className={`order-1 text-4xl sm:text-5xl leading-normal sm:leading-normal font-extrabold text-blue-500 ${
               numStars === -1 ? 'opacity-0' : 'opacity-100'
             } transition`}
           >

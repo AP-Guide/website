@@ -1,7 +1,11 @@
 import * as React from 'react';
 import Danger from './Danger';
 
-export const IncompleteSection: React.FC = ({ children }) => {
+export const IncompleteSection = ({
+  children,
+}: {
+  children?: React.ReactNode;
+}): JSX.Element => {
   return (
     <Danger title="This section is not complete.">
       Any help would be appreciated! Just submit a Pull Request on{' '}
@@ -10,7 +14,7 @@ export const IncompleteSection: React.FC = ({ children }) => {
         target="_blank"
         rel="noreferrer"
       >
-        Github
+        GitHub
       </a>
       .{children && <div className="h-2 mb-0" />}
       {children}

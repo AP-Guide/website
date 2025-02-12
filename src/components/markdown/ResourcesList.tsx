@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { useContext } from 'react';
-import UserDataContext from '../../context/UserDataContext/UserDataContext';
+import { useUserLangSetting } from '../../context/UserDataContext/properties/simpleProperties';
 import { ResourceInfo } from '../../models/resource';
 import { books } from '../../utils/books';
 import PGS from './PGS';
@@ -45,6 +44,7 @@ const moduleSources = {
     'https://sendtoaryansh.gitbook.io/informatics-notes/',
     'sendtoaryansh.gitbook.io',
   ],
+  AoPS: ['http://aops.com/', 'Art of Problem Solving'],
   Benq: [
     'https://github.com/bqi343/USACO/blob/master/Implementations/content/',
     'github.com/bqi343/USACO',
@@ -54,7 +54,13 @@ const moduleSources = {
     'youtube.com/c/Errichto/about',
   ],
   CSA: ['https://csacademy.com/lesson/', 'CS Academy'],
-  CF: ['https://codeforces.com/blog/entry/', 'CodeForces'],
+  CF: ['https://codeforces.com/blog/entry/', 'Codeforces'],
+  'CF EDU': [
+    'https://codeforces.com/edu/courses',
+    'Codeforces Edu (enroll to view)',
+  ],
+  HE: ['https://hackerearth.com/', 'HackerEarth'],
+  KA: ['https://www.khanacademy.org/', 'KhanAcademy'],
   TC: [
     'https://www.topcoder.com/community/competitive-programming/tutorials/',
     'TopCoder',
@@ -75,24 +81,23 @@ const moduleSources = {
 
 export function Resource({
   source,
+  sourceDescription,
   url,
   starred,
   title,
   children,
 }: {
   source?: string;
+  sourceDescription?: string;
   url?: string;
   starred?: boolean;
   title?: string;
   children?: React.ReactNode;
 }): JSX.Element {
-  const userSettings = useContext(UserDataContext);
+  const lang = useUserLangSetting();
   source = source ?? '';
-  let sourceDescription = '';
+  sourceDescription = sourceDescription ?? '';
   if (source in books) {
-    // must be book
-    // if (!(source in books))
-    //   throw `No URL. Did you make a typo in the source (${source})? Resource title: ${props.title}`;
     sourceDescription = books[source][1];
     if (!url) {
       // auto-gen page #
@@ -109,7 +114,7 @@ export function Resource({
         return url;
       };
       if (source === 'IUSACO') {
-        if (userSettings.lang === 'java') {
+        if (lang === 'java') {
           url = getSec(
             'JAVA',
             'https://darrenyao.com/usacobook/java.pdf',
@@ -123,16 +128,11 @@ export function Resource({
       } else url = books[source][0];
     }
   } else if (source in moduleSources) {
-    if (!url.startsWith('http')) url = moduleSources[source][0] + url;
+    if (!url?.startsWith('http')) url = moduleSources[source][0] + url;
     sourceDescription = moduleSources[source][1];
   } else {
-    if (!url.startsWith('http')) {
+    if (!url?.startsWith('http')) {
       throw `URL ${url} is not valid. Did you make a typo in the source (${source}), or in the URL? Resource name: ${title}`;
-    }
-    if (source.indexOf('@') != -1) {
-      const ind = source.indexOf('@');
-      sourceDescription = source.substring(ind + 1, source.length);
-      source = source.substring(0, ind);
     }
   }
   const resource: ResourceInfo = {
