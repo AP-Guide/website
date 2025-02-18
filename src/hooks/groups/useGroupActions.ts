@@ -8,15 +8,14 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { useContext } from 'react';
-import UserDataContext from '../../context/UserDataContext/UserDataContext';
+import { useFirebaseUser } from '../../context/UserDataContext/UserDataContext';
 import { GroupData, JoinGroupLink } from '../../models/groups/groups';
 import { useFirebaseApp } from '../useFirebase';
 import { useUserGroups } from './useUserGroups';
 
 export function useGroupActions() {
   const firebaseApp = useFirebaseApp();
-  const { firebaseUser } = useContext(UserDataContext);
+  const firebaseUser = useFirebaseUser();
   const { invalidateData } = useUserGroups();
 
   const updateGroup = async (
@@ -102,14 +101,14 @@ export function useGroupActions() {
     },
     updateGroup,
     leaveGroup: async (groupId: string, userId: string) => {
-      const leaveResult = ((
+      const leaveResult = (
         await httpsCallable(
           getFunctions(firebaseApp),
           'groups-leave'
         )({
           groupId,
         })
-      ).data as never) as
+      ).data as never as
         | { success: true }
         | { success: false; errorCode: string };
       console.log(leaveResult);
@@ -137,7 +136,7 @@ export function useGroupActions() {
         maxUses: null,
         expirationTime: null,
         usedBy: [],
-        author: firebaseUser.uid,
+        author: firebaseUser!.uid,
       };
       const linkDoc = doc(
         collection(getFirestore(firebaseApp), 'group-join-links')
@@ -171,7 +170,7 @@ export function useGroupActions() {
       groupId: string,
       targetUid: string
     ): Promise<void> => {
-      const removeResult = ((
+      const removeResult = (
         await httpsCallable(
           getFunctions(firebaseApp),
           'groups-removeMember'
@@ -179,7 +178,7 @@ export function useGroupActions() {
           groupId,
           targetUid,
         })
-      ).data as never) as
+      ).data as never as
         | { success: true }
         | { success: false; errorCode: string };
       if (removeResult.success === true) {
@@ -206,7 +205,7 @@ export function useGroupActions() {
       targetUid: string,
       newPermissionLevel: 'OWNER' | 'ADMIN' | 'MEMBER'
     ): Promise<void> => {
-      const updateResult = ((
+      const updateResult = (
         await httpsCallable(
           getFunctions(firebaseApp),
           'groups-updateMemberPermissions'
@@ -215,7 +214,7 @@ export function useGroupActions() {
           targetUid,
           newPermissionLevel,
         })
-      ).data as never) as
+      ).data as never as
         | { success: true }
         | { success: false; errorCode: string };
       if (updateResult.success === true) {

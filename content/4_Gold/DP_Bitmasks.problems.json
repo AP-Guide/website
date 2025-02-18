@@ -14,6 +14,20 @@
       }
     }
   ],
+  "sam2": [
+    {
+      "uniqueId": "ac-CloseGroup",
+      "name": "Close Group",
+      "url": "https://atcoder.jp/contests/abc187/tasks/abc187_f",
+      "source": "AC",
+      "difficulty": "Easy",
+      "isStarred": false,
+      "tags": ["Bitmasks"],
+      "solutionMetadata": {
+        "kind": "none"
+      }
+    }
+  ],
   "general": [
     {
       "uniqueId": "ac-matching",
@@ -25,6 +39,19 @@
       "tags": ["Bitmasks", "DP"],
       "solutionMetadata": {
         "kind": "internal"
+      }
+    },
+    {
+      "uniqueId": "ac-grouping",
+      "name": "Grouping",
+      "url": "https://atcoder.jp/contests/dp/tasks/dp_u",
+      "source": "AC",
+      "difficulty": "Easy",
+      "isStarred": false,
+      "tags": ["Bitmasks", "DP"],
+      "solutionMetadata": {
+        "kind": "autogen-label-from-site",
+        "site": "AC"
       }
     },
     {
@@ -48,21 +75,7 @@
       "isStarred": false,
       "tags": ["Bitmasks", "DP"],
       "solutionMetadata": {
-        "kind": "USACO",
-        "usacoId": "494"
-      }
-    },
-    {
-      "uniqueId": "usaco-1089",
-      "name": "Uddered but not Herd",
-      "url": "http://www.usaco.org/index.php?page=viewproblem2&cpid=1089",
-      "source": "Gold",
-      "difficulty": "Easy",
-      "isStarred": false,
-      "tags": ["Bitmasks", "DP"],
-      "solutionMetadata": {
-        "kind": "USACO",
-        "usacoId": "1089"
+        "kind": "internal"
       }
     },
     {
@@ -75,6 +88,19 @@
       "tags": ["Bitmasks", "DP"],
       "solutionMetadata": {
         "kind": "internal"
+      }
+    },
+    {
+      "uniqueId": "usaco-1089",
+      "name": "Uddered but not Herd",
+      "url": "http://www.usaco.org/index.php?page=viewproblem2&cpid=1089",
+      "source": "Gold",
+      "difficulty": "Normal",
+      "isStarred": false,
+      "tags": ["Bitmasks", "DP"],
+      "solutionMetadata": {
+        "kind": "USACO",
+        "usacoId": "1089"
       }
     },
     {
@@ -102,18 +128,6 @@
       }
     },
     {
-      "uniqueId": "ys-MaxIndepSet",
-      "name": "Max Indep Set",
-      "url": "https://judge.yosupo.jp/problem/maximum_independent_set",
-      "source": "YS",
-      "difficulty": "Normal",
-      "isStarred": false,
-      "tags": ["Bitmasks", "Meet in Middle", "DP"],
-      "solutionMetadata": {
-        "kind": "none"
-      }
-    },
-    {
       "uniqueId": "kattis-catandmice",
       "name": "Cat & Mice",
       "url": "https://open.kattis.com/problems/catandmice",
@@ -126,6 +140,31 @@
       }
     },
     {
+      "uniqueId": "ys-MaxIndepSet",
+      "name": "Max Indep Set",
+      "url": "https://judge.yosupo.jp/problem/maximum_independent_set",
+      "source": "YS",
+      "difficulty": "Hard",
+      "isStarred": false,
+      "tags": ["Bitmasks", "Meet in Middle", "DP"],
+      "solutionMetadata": {
+        "kind": "internal"
+      }
+    },
+    {
+      "uniqueId": "usaco-1282",
+      "name": "Lights Off",
+      "url": "http://www.usaco.org/index.php?page=viewproblem2&cpid=1282",
+      "source": "Gold",
+      "difficulty": "Hard",
+      "isStarred": false,
+      "tags": ["Bitwise", "DP"],
+      "solutionMetadata": {
+        "kind": "USACO",
+        "usacoId": "1282"
+      }
+    },
+    {
       "uniqueId": "izho-17-LongestBeautifulSequence",
       "name": "2017 - Longest beautiful sequence",
       "url": "https://oj.uz/problem/view/IZhO17_subsequence",
@@ -134,7 +173,7 @@
       "isStarred": false,
       "tags": ["Bitmasks", "DP"],
       "solutionMetadata": {
-        "kind": "none"
+        "kind": "internal"
       }
     },
     {
@@ -144,9 +183,22 @@
       "source": "COCI",
       "difficulty": "Hard",
       "isStarred": true,
-      "tags": ["Bitmasks", "DP", "Game Theory", "Sqrt"],
+      "tags": ["Bitmasks", "DP", "Tree", "Game Theory"],
       "solutionMetadata": {
-        "kind": "none"
+        "kind": "internal"
+      }
+    },
+    {
+      "uniqueId": "usaco-1209",
+      "name": "Redistributing Gifts",
+      "url": "http://usaco.org/index.php?page=viewproblem2&cpid=1209",
+      "source": "Gold",
+      "difficulty": "Hard",
+      "isStarred": false,
+      "tags": ["Bitmasks", "DP"],
+      "solutionMetadata": {
+        "kind": "USACO",
+        "usacoId": "1209"
       }
     },
     {
@@ -158,7 +210,7 @@
       "isStarred": false,
       "tags": ["Bitmasks", "DP"],
       "solutionMetadata": {
-        "kind": "none"
+        "kind": "internal"
       }
     },
     {
@@ -185,8 +237,7 @@
       "isStarred": false,
       "tags": ["DP", "Combinatorics"],
       "solutionMetadata": {
-        "kind": "autogen-label-from-site",
-        "site": "CF"
+        "kind": "internal"
       }
     },
     {

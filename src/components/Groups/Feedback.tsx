@@ -7,17 +7,15 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import UserDataContext from '../../context/UserDataContext/UserDataContext';
+import { useFirebaseUser } from '../../context/UserDataContext/UserDataContext';
 import { useFirebaseApp } from '../../hooks/useFirebase';
 
 export default function Feedback({ videoId }): JSX.Element {
   const firebaseApp = useFirebaseApp();
   const db = getFirestore(firebaseApp);
-  const {
-    firebaseUser: { uid },
-  } = useContext(UserDataContext);
+  const { uid } = useFirebaseUser()!;
   const baseClasses =
     'rounded-full border h-8 w-8 text-xl transform transition focus:outline-none';
   const unselectedClasses = 'hover:scale-110 border-gray-200';
@@ -28,12 +26,27 @@ export default function Feedback({ videoId }): JSX.Element {
   >(null);
   const [comment, setComment] = useState('');
   const [showAdditionalFeedback, setShowAdditionalFeedback] = useState(false);
+
   useEffect(() => {
     if (!db || !uid) return;
     getDoc(doc(db, 'videos', videoId, 'feedback', uid)).then(data => {
       setSelected(data.data()?.rating || null);
     });
   }, [uid, db]);
+
+  // Code to log video feedback to console
+  // const group = useActiveGroup();
+  // const isUserAdmin = isUserAdminOfGroup(group.groupData, group.activeUserId);
+  // useEffect(() => {
+  //   if (!db || !videoId || !isUserAdmin) return;
+  //   // actually, only some people can view video feedback, not just any admin
+  //   // but this is good enough whatever
+  //   getDocs(collection(db, 'videos', videoId, 'feedback'))
+  //     .then(snap => {
+  //       console.log(snap.docs.map(doc => doc.data()));
+  //     })
+  //     .catch(e => {});
+  // }, [videoId, db, isUserAdmin]);
 
   return (
     <>

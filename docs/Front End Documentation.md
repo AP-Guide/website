@@ -12,7 +12,7 @@ experience.
    - Install [node.js](https://nodejs.org/en/)
      - Gatsby docs:
        https://www.gatsbyjs.org/tutorial/part-zero/#install-nodejs-for-your-appropriate-operating-system
-   - Install [yarn](https://classic.yarnpkg.com/en/)
+   - Install [yarn 1](https://classic.yarnpkg.com/en/)
      - `npm install -g yarn`? might work
 2. Clone repo
    - `git clone https://github.com/cpinitiative/usaco-guide.git`
@@ -20,15 +20,21 @@ experience.
    - `yarn`
 4. Run development server
    - `yarn develop`
+5. Test UI Components
+   - `yarn storybook`
 
 ## Link Checker
 
-`yarn build && yarn serve` -- keep this terminal alive!
+Update 2/3/24: I'm not certain whether this actually works anymore...
 
-`yarn check-links`
+By default, Github CI will check for broken _internal_ links. We can also
+manually check for broken external links by:
 
-If crash due to some `bhttp` error, it's probably a timeout. To fix temporarily,
-run:
+1. `yarn build && yarn serve` -- keep this terminal alive!
+2. `yarn check-links`
+
+If this command crashes due to some `bhttp` error, it's probably a timeout. To
+fix temporarily, run:
 
 ```
 blc http://localhost:9000 -rof --exclude train.usaco.org
@@ -38,6 +44,10 @@ And find where it crashes, then check the broken link manually and add to
 exclusion list. As `train.usaco.org` sometimes crashes, it's added already.
 
 ## XDM Configuration
+
+Update 2/3/24: We switched from MDX v1 to XDM a while ago, but now that MDX
+v2/v3 are out with many of the features found in XDM, we should switch back.
+`gatsby-plugin-mdx` supports MDX v2, which is sufficient for us.
 
 XDM configuration is currently (somewhat) duplicated across three files:
 
@@ -52,16 +62,16 @@ compile xdm into `src/gatsby/xdm.js` with Webpack:
 import path from 'path';
 
 export default {
-  mode: 'production',
-  entry: './index.js',
-  output: {
-    path: path.resolve('D:\\Code\\xdm', 'dist'),
-    filename: 'bundle.js',
-    library: {
-      name: 'xdm',
-      type: 'commonjs',
-    },
-  },
+	mode: 'production',
+	entry: './index.js',
+	output: {
+		path: path.resolve('D:\\Code\\xdm', 'dist'),
+		filename: 'bundle.js',
+		library: {
+			name: 'xdm',
+			type: 'commonjs',
+		},
+	},
 };
 ```
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import UserDataContext from './UserDataContext';
+import { useFirebaseUser } from './UserDataContext';
 
 // the value is the firebase claim name
 export type UserPermissions = 'isAdmin' | 'canModerate' | 'canCreateGroups';
@@ -25,7 +25,7 @@ export const UserPermissionInformation: {
 
 const UserPermissionsContext = React.createContext<{
   permissions: { [key in UserPermissions]: boolean };
-}>(null);
+} | null>(null);
 
 export const UserPermissionsContextProvider = ({ children }) => {
   const defaultPermissions = {
@@ -34,10 +34,9 @@ export const UserPermissionsContextProvider = ({ children }) => {
     canCreateGroups: false,
   };
 
-  const [permissions, setPermissions] = React.useState<
-    { [key in UserPermissions]: boolean }
-  >(defaultPermissions);
-  const { firebaseUser } = React.useContext(UserDataContext);
+  const [permissions, setPermissions] =
+    React.useState<{ [key in UserPermissions]: boolean }>(defaultPermissions);
+  const firebaseUser = useFirebaseUser();
 
   React.useEffect(() => {
     if (firebaseUser?.uid) {

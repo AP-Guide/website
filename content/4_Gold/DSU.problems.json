@@ -96,8 +96,19 @@
       "isStarred": false,
       "tags": ["DSU"],
       "solutionMetadata": {
-        "kind": "autogen-label-from-site",
-        "site": "CSA"
+        "kind": "internal"
+      }
+    },
+    {
+      "uniqueId": "cf-468B",
+      "name": "Two Sets",
+      "url": "https://codeforces.com/contest/468/problem/B",
+      "source": "CF",
+      "difficulty": "Normal",
+      "isStarred": false,
+      "tags": ["DSU"],
+      "solutionMetadata": {
+        "kind": "internal"
       }
     }
   ],
@@ -115,6 +126,19 @@
       }
     },
     {
+      "uniqueId": "usaco-1259",
+      "name": "Strongest Friendship Group",
+      "url": "http://www.usaco.org/index.php?page=viewproblem2&cpid=1259",
+      "source": "Gold",
+      "difficulty": "Hard",
+      "isStarred": false,
+      "tags": ["DSU", "Merging", "Sorted Set"],
+      "solutionMetadata": {
+        "kind": "USACO",
+        "usacoId": "1259"
+      }
+    },
+    {
       "uniqueId": "usaco-384",
       "name": "Ski Course Rating",
       "url": "http://www.usaco.org/index.php?page=viewproblem2&cpid=384",
@@ -123,8 +147,7 @@
       "isStarred": false,
       "tags": ["DSU"],
       "solutionMetadata": {
-        "kind": "USACO",
-        "usacoId": "384"
+        "kind": "internal"
       }
     },
     {
@@ -168,7 +191,7 @@
       "uniqueId": "usaco-950",
       "name": "Valleys",
       "url": "http://www.usaco.org/index.php?page=viewproblem2&cpid=950",
-      "source": "Plat",
+      "source": "Platinum",
       "difficulty": "Very Hard",
       "isStarred": false,
       "tags": ["DSU"],

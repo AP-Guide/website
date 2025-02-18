@@ -1,6 +1,7 @@
 import { Transition } from '@headlessui/react';
 import * as React from 'react';
 import { useContext } from 'react';
+import { useDarkMode } from '../../context/DarkModeContext';
 import useProblemSubmissionResult from '../../hooks/useProblemSubmissionResult';
 import {
   FirebaseSubmission,
@@ -12,17 +13,21 @@ import CodeBlock from '../markdown/CodeBlock/CodeBlock';
 const ProblemSubmissionPopupContext = React.createContext<{
   showPopup: boolean;
   setShowPopup: (showPopup: boolean) => void;
-  submission: FirebaseSubmission;
+  submission: FirebaseSubmission | null;
   setSubmission: (submission: FirebaseSubmission) => void;
-}>(null);
+} | null>(null);
 
 function ProblemSubmissionPopup() {
   const popupContext = useContext(ProblemSubmissionPopupContext);
+  if (!popupContext) throw new Error('No ProblemSubmissionPopupContext');
   const submission = popupContext.submission;
-  const submissionResult = useProblemSubmissionResult(submission?.submissionID);
+  const submissionResult = useProblemSubmissionResult(
+    submission && 'submissionID' in submission ? submission?.submissionID : null
+  );
+
+  const isDarkMode = useDarkMode();
 
   if (!submission) return null;
-
   return (
     <Transition
       show={popupContext.showPopup}
@@ -75,8 +80,23 @@ function ProblemSubmissionPopup() {
               </p>
             </div>
             <div className="mt-4 text-sm">
-              {submission && (
-                <CodeBlock className={`language-${submission.language}`}>
+              {'link' in submission ? (
+                <p className="px-4 sm:px-6 text-base">
+                  Submission Link:{' '}
+                  <a
+                    className="font-medium underline"
+                    href={submission.link}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {submission.link}
+                  </a>
+                </p>
+              ) : (
+                <CodeBlock
+                  className={`language-${submission.language}`}
+                  isDarkMode={isDarkMode}
+                >
                   {submissionResult?.sourceCode ?? 'Loading...'}
                 </CodeBlock>
               )}
@@ -99,7 +119,9 @@ function ProblemSubmissionPopup() {
 
 export function ProblemSubmissionPopupProvider({ children }) {
   const [showPopup, setShowPopup] = React.useState(false);
-  const [submission, setSubmission] = React.useState<FirebaseSubmission>(null);
+  const [submission, setSubmission] = React.useState<FirebaseSubmission | null>(
+    null
+  );
   return (
     <ProblemSubmissionPopupContext.Provider
       value={{

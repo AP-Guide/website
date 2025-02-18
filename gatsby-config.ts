@@ -92,18 +92,18 @@ const plugins = [
     },
   },
   {
-    resolve: `gatsby-plugin-google-analytics`,
+    resolve: `gatsby-plugin-google-gtag`,
     options: {
-      trackingId: 'UA-55628264-7',
-      head: false,
-      pageTransitionDelay: 100,
+      trackingIds: ['G-1JGYFFBHXN'],
+      pluginConfig: {
+        head: false,
+      },
     },
   },
   {
     resolve: '@sentry/gatsby',
     options: {
-      dsn:
-        'https://2e28bddc353b46e7bead85347a099a04@o423042.ingest.sentry.io/5352677',
+      dsn: 'https://2e28bddc353b46e7bead85347a099a04@o423042.ingest.sentry.io/5352677',
       denyUrls: [/extensions\//i, /^chrome:\/\//i],
       ...(process.env.NODE_ENV === 'production'
         ? {}
@@ -111,10 +111,6 @@ const plugins = [
             defaultIntegrations: false,
           }),
     },
-  },
-  {
-    resolve: `gatsby-plugin-create-client-paths`,
-    options: { prefixes: ['/groups/*'] },
   },
   {
     // This plugin must be placed last in your list of plugins to ensure that it can query all the GraphQL data
@@ -153,4 +149,7 @@ module.exports = {
   flags,
   siteMetadata,
   plugins,
+  graphqlTypegen: {
+    generateOnBuild: true,
+  },
 };

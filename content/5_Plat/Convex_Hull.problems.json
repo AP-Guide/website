@@ -47,7 +47,7 @@
       "uniqueId": "usaco-864",
       "name": "Balance Beam",
       "url": "http://www.usaco.org/index.php?page=viewproblem2&cpid=864",
-      "source": "Plat",
+      "source": "Platinum",
       "difficulty": "Normal",
       "isStarred": false,
       "tags": ["Convex"],
@@ -93,6 +93,18 @@
       "solutionMetadata": {
         "kind": "sketch",
         "sketch": "enclosing rectangle"
+      }
+    },
+    {
+      "uniqueId": "balkan-11-timeismoney",
+      "name": "2011 - Timeismoney",
+      "url": "http://oj.uz/problem/view/balkan11_timeismoney",
+      "source": "Balkan OI",
+      "difficulty": "Hard",
+      "isStarred": true,
+      "tags": ["MST", "Convex"],
+      "solutionMetadata": {
+        "kind": "internal"
       }
     },
     {

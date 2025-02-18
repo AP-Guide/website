@@ -1,13 +1,13 @@
 ---
 id: dp-bitmasks
 title: 'Bitmask DP'
-author: Michael Cao, Siyong Huang 
+author: Michael Cao, Siyong Huang, Peng Bai
 contributors: Andrew Wang, Neo Wang
 prerequisites:
   - intro-bitwise
   - intro-dp
 description: DP problems that require iterating over subsets.
-frequency: 1
+frequency: 2
 redirects:
   - /plat/dp-bitmasks
 ---
@@ -33,7 +33,7 @@ You can often use this to solve subtasks.
 		Elevator Rides, SOS, Hamiltonian
 	</Resource>
 	<Resource
-		source="NW@nwatx"
+		source="nwatx"
 		title="A Primer on Bitmask DP"
 		url="https://nwatx.me/post/dpbitmasks"
 		starred
@@ -45,7 +45,8 @@ You can often use this to solve subtasks.
 		Hamiltonian walks
 	</Resource>
 	<Resource
-		source="DPCC@DP for Computing Contests"
+		source="DPCC"
+		sourceDescription="DP for Computing Contests"
 		title="Bitmasking"
 		url="https://dp-book.com/Dynamic_Programming.pdf#page=37"
 		starred
@@ -53,7 +54,7 @@ You can often use this to solve subtasks.
 		Diagram
 	</Resource>
 	<Resource
-		source="HE@HackerEarth"
+		source="HE"
 		title="DP and Bit Masking"
 		url="https://www.hackerearth.com/practice/algorithms/dynamic-programming/bit-masking/tutorial/"
 	/>
@@ -61,7 +62,6 @@ You can often use this to solve subtasks.
 
 ### Solution
 
-<Spoiler title = "Solution">
 
 Let $dp[S][i]$ be the number of routes that visit all the cities in the subset
 $S$ and end at city $i$. The transitions will then be:
@@ -72,6 +72,11 @@ $$
 
 where $S  \setminus \{i\}$ is the subset $S$ without city $i$.
 
+**Time Complexity:** $\mathcal{O}(2^N \cdot N^2)$
+<LanguageSection>
+
+<CPPSection>
+
 ```cpp
 #include <bits/stdc++.h>
 using namespace std;
@@ -79,7 +84,7 @@ using namespace std;
 using ll = long long;
 
 const int MAX_N = 20;
-const ll MOD = (ll) 1e9 + 7;
+const ll MOD = (ll)1e9 + 7;
 
 ll dp[1 << MAX_N][MAX_N];
 // come_from[i] contains the cities that can fly to i
@@ -94,20 +99,17 @@ int main() {
 		cin >> start >> end;
 		come_from[--end].push_back(--start);
 	}
-	
+
 	dp[1][0] = 1;
 	for (int s = 2; s < 1 << city_num; s++) {
 		// only consider subsets that have the first city
-		if ((s & (1 << 0)) == 0)
-			continue;
+		if ((s & (1 << 0)) == 0) continue;
 		// also only consider subsets with the last city if it's the full subset
-		if ((s & (1 << (city_num - 1))) && s != ((1 << city_num) - 1))
-			continue;
+		if ((s & (1 << (city_num - 1))) && s != ((1 << city_num) - 1)) continue;
 
 		for (int end = 0; end < city_num; end++) {
-			if ((s & (1 << end)) == 0)
-				continue;
-			
+			if ((s & (1 << end)) == 0) continue;
+
 			// the subset that doesn't include the current end
 			int prev = s - (1 << end);
 			for (int j : come_from[end]) {
@@ -115,14 +117,175 @@ int main() {
 					dp[s][end] += dp[prev][j];
 					dp[s][end] %= MOD;
 				}
-			}	
+			}
 		}
 	}
 	cout << dp[(1 << city_num) - 1][city_num - 1] << '\n';
 }
 ```
 
-</Spoiler>
+</CPPSection>
+<PySection>
+
+<Warning>
+
+Due to Python's large constant factor, the solution below TLEs.
+
+</Warning>
+
+```py
+import sys
+
+MOD = 10**9 + 7
+
+input = sys.stdin.readline
+
+n, m = map(int, input().strip().split())
+dp = [[0 for _ in range(n)] for _ in range(1 << n)]
+dp[1][0] = 1
+
+adj = [[] for _ in range(n)]
+for i in range(m):
+	a, b = map(int, input().strip().split())
+	adj[b - 1].append(a - 1)
+
+for cities in range(1, 1 << n):
+	# only consider cities that include the first city
+	if not cities & 1:
+		continue
+
+	# only consider subsets with the last city if it's the full subset
+	if cities & (1 << n - 1) and cities != (1 << n) - 1:
+		continue
+
+	# loop through possible ending cities
+	for end in range(1, n):
+		if not cities & (1 << end):
+			continue
+
+		prev_cities = cities ^ (1 << end)
+		for prev_end in adj[end]:
+			if not prev_cities & (1 << prev_end):
+				continue
+			dp[cities][end] += dp[prev_cities][prev_end]
+			dp[cities][end] %= MOD
+
+print(dp[(1 << n) - 1][n - 1])
+```
+
+</PySection>
+</LanguageSection>
+
+## Merging Subsets
+
+In some problems, for a set $S$, it is not sufficient to transition from $S  \setminus \{i\}$.
+Instead, it is necessary to transition from all *strict* subsets of $S$.
+
+Though it may seem like we have to do $\mathcal{O}(2^N \cdot 2^N) = \mathcal{O}(4^N)$ transitions,
+theres really only $\mathcal{O}(3^N)$ transitions!
+
+To see why, let's count the number of ordered pairs $(T, S)$ where $T \subset S$.
+Instead of counting directly, notice that each element $x$ is either:
+1. In $T$ and $S$
+2. In neither
+3. In $S$ but not in $T$.
+If $x$ is in $T$ but not in $S$, $T$ isn't a valid subset.
+
+Given that each element can be in three possible states, our overall complexity is actually $\mathcal{O}(3^N)$.
+
+To implement this, we can do some bitwise tricks:
+<LanguageSection>
+<CPPSection>
+
+```cpp
+for (int mask = 0; mask < (1 << n); mask++) {
+	for (int submask = mask; submask != 0; submask = (submask - 1) & mask) {
+		int subset = mask ^ submask;
+		// do whatever you need to do here
+	}
+}
+```
+
+</CPPSection>
+</LanguageSection>
+
+When we subtract $1$ from $\texttt{submask}$, the rightmost bit flips to a $0$ and all bits to the right of it will become $1$.
+Applying the bitwise AND with $\texttt{mask}$ removes all extra bits not in $\texttt{mask}$.
+From this process, we can get all strict subsets in increasing order by calculating $\texttt{mask} \oplus \texttt{submask}$, which does set subtraction.
+
+<FocusProblem problem="sam2" />
+
+### Explanation
+
+The goal of this problem is to partition the nodes into sets such that the nodes in each set form a complete graph.
+Let $\texttt{dp}[S]$ be the minimum number of partitions such that in each partition, the graph formed is a complete graph.
+
+We can first find which sets $T$ form a complete graph, setting $\texttt{dp}[T]$ to $1$ and $\infty$ otherwise.
+This can be done naively in $\mathcal{O}(2^N \cdot N^2)$ or $\mathcal{O}(2^N \cdot N)$
+by setting the adjacency list as a bitmask and using bit manipulations if a set of nodes is a complete graph.
+
+Then we can transition as follows:
+$$
+\texttt{dp}[S] = \min_{T \subset S} (\texttt{dp}[T] + \texttt{dp}[S \setminus T])
+$$
+
+### Implementation
+
+**Time Complexity:** $\mathcal{O}(3^N + 2^N \cdot N)$
+
+<LanguageSection>
+<CPPSection>
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+	int n, m;
+	cin >> n >> m;
+	vector<int> adj(n);
+	for (int i = 0; i < m; i++) {
+		int u, v;
+		cin >> u >> v;
+		u--;
+		v--;
+		// adjacency list represented as a bitmask
+		adj[u] |= (1 << v);
+		adj[v] |= (1 << u);
+	}
+
+	vector<int> dp(1 << n, INT32_MAX);
+	for (int mask = 0; mask < (1 << n); mask++) {
+		bool connected = true;
+		for (int u = 0; u < n; u++) {
+			if (((mask >> u) & 1) != 0) {
+				// check if u is connected to all other nodes in mask
+				if (((adj[u] | (1 << u)) & mask) != mask) {
+					connected = false;
+					break;
+				}
+			}
+		}
+
+		if (connected) { dp[mask] = 1; }
+	}
+
+	for (int mask = 0; mask < (1 << n); mask++) {
+		for (int submask = mask; submask; submask = (submask - 1) & mask) {
+			int subset = mask ^ submask;
+			// submask has everything in mask but not in subset
+			if (dp[subset] != INT32_MAX && dp[submask] != INT32_MAX) {
+				dp[mask] = min(dp[mask], dp[subset] + dp[submask]);
+			}
+		}
+	}
+
+	cout << dp[(1 << n) - 1] << endl;
+}
+```
+
+</CPPSection>
+</LanguageSection>
 
 ### Problems
 
@@ -132,8 +295,8 @@ int main() {
 
 ### Rough Idea
 
-In some number theory problems, it helps to represent each number were
-represented by a bitmask of its prime divisors. For example, the set
+In some number theory problems, it helps to represent each
+number with a bitmask of its prime divisors. For example, the set
 $\{6, 10, 15 \}$ can be represented by $\{0b011, 0b101, 0b110 \}$ (in
 binary)<Asterisk>The $0b$ prefix simply means that the number is
 binary</Asterisk>, where the bits correspond to divisibility by $[2, 3, 5]$.
@@ -144,46 +307,10 @@ Then, here are some equivalent operations between masks and these integers:
 - Bitwise OR is LCM
 - Iterating over bits is iterating over prime divisors
 - Iterating over submasks is iterating over divisors
-
-<!--
-In particular those that involve making GCD equal to $1$, may be optimized using a sort of bitmask over primes.
- -->
-
 Choosing a set with GCD $1$ is equivalent to choosing a set of bitmasks that AND
 to $0$. For example, we can see that $\{6, 10 \}$ doesn't have GCD $1$ because
 $0b011 \& 0b101 = 0b001 \neq 0$. On the other hand, $\{6, 10, 15 \}$ has GCD $1$
 because $0b011 \& 0b101 \& 0b110 = 0b000 = 0$.
-
-<!-- 
-Therefore, if we have a reasonably short list of primes (perhaps $\leq 20$), then we can simply represent numbers with their prime divisors bitmask and change the NT problem to a bitmask problem.
-(Similar ideas can be used to tackle Professional Layer/Nora's Toy Boxes)
-
-However, in less restricted cases, there are usually much more than just 20 bits.
-Suppose the upper limit on input integers is $100000$.
-There are $9592$ primes that are less than $100000$, and if each of those primes represents a bit, then we would have way too many possible bitmasks.
-However, with only $100000$ distinct integers, clearly we do not need to consider all $2^{9592}$ bitmasks.
-
-Notice how masks like $0b1100 \dots 000$ (which corresponds to $99991 \times 99989 = 9998000099$) exceed the maximum limit on the input.
-Thus, they would never actually be used. 
-In fact, the vast majority of the $2^{9592}$ masks are unusable in the same way;
-we only care about the masks which correspond to integers less than the upper limit, which in this case is $100000$.
-
-Additionally, bitmasks of length $9592$ are extraordinarily long.
-Since we know a conservative bound of $100000$ different bitmasks anyways, one may consider trying to assign each bitmask to an integer between $1$ and $100000$.
-In fact, the simplest way to do this is just to assign each bitmask to the integer it corresponds to -- ignoring the mask altogether!
-(Notice how not all integers actually correspond to a bitmask. The bitmask corresponding to $4$, for example, would be represented by the integer $2$)
- -->
-
-<!-- Operating like this makes it easier to think about and apply PIE or SOS wrt numbers and GCDs. -->
-
-<!-- (Similar ideas can be used to tackle Gold Experience) -->
-
-<IncompleteSection>
-
-Maybe this is just standard NT, but I've always thought about it as a bitmask.
-Also, any tutorials or more problems of this type?
-
-</IncompleteSection>
 
 ### Problems
 

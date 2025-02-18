@@ -1,8 +1,27 @@
 import * as React from 'react';
+import { DarkModeContext } from '../src/context/DarkModeContext';
 import '../src/styles/main.css';
 import './storybook.css';
-import { DarkModeContext } from '../src/context/DarkModeContext';
+
 import { action } from '@storybook/addon-actions';
+
+// Gatsby's Link overrides:
+// Gatsby Link calls the `enqueue` & `hovering` methods on the global variable ___loader.
+// This global object isn't set in storybook context, requiring you to override it to empty functions (no-op),
+// so Gatsby Link doesn't throw errors.
+global.___loader = {
+  enqueue: () => {},
+  hovering: () => {},
+};
+// This global variable prevents the "__BASE_PATH__ is not defined" error inside Storybook.
+global.__BASE_PATH__ = '/';
+
+// Navigating through a gatsby app using gatsby-link or any other gatsby component will use the `___navigate` method.
+// In Storybook, it makes more sense to log an action than doing an actual navigate. Check out the actions addon docs for more info: https://storybook.js.org/docs/react/essentials/actions
+
+window.___navigate = pathname => {
+  action('NavigateTo:')(pathname);
+};
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -25,14 +44,14 @@ export const parameters = {
 };
 
 export const decorators = [
-  renderStory => (
+  Story => (
     <div className="grid storybook-container font-sans">
       <div className="h-full">
         <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
           <p className="text-gray-800 text-2xl font-bold">Light Mode</p>
           <div className="h-4" />
           <DarkModeContext.Provider value={false}>
-            {renderStory()}
+            <Story />
           </DarkModeContext.Provider>
         </div>
       </div>
@@ -41,26 +60,10 @@ export const decorators = [
           <p className="text-gray-100 text-2xl font-bold">Dark Mode</p>
           <div className="h-4" />
           <DarkModeContext.Provider value={true}>
-            {renderStory()}
+            <Story />
           </DarkModeContext.Provider>
         </div>
       </div>
     </div>
   ),
 ];
-
-// Gatsby's Link overrides:
-// Gatsby Link calls the `enqueue` & `hovering` methods on the global variable ___loader.
-// This global object isn't set in storybook context, requiring you to override it to empty functions (no-op),
-// so Gatsby Link doesn't throw any errors.
-global.___loader = {
-  enqueue: () => {},
-  hovering: () => {},
-};
-// This global variable is prevents the "__BASE_PATH__ is not defined" error inside Storybook.
-global.__BASE_PATH__ = '/';
-// Navigating through a gatsby app using gatsby-link or any other gatsby component will use the `___navigate` method.
-// In Storybook it makes more sense to log an action than doing an actual navigate. Checkout the actions addon docs for more info: https://github.com/storybookjs/storybook/tree/master/addons/actions.
-window.___navigate = pathname => {
-  action('NavigateTo:')(pathname);
-};

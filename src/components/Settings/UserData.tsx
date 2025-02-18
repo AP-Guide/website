@@ -1,13 +1,17 @@
 import * as React from 'react';
-import { useContext, useState } from 'react';
-import UserDataContext from '../../context/UserDataContext/UserDataContext';
+import { useState } from 'react';
+import {
+  useImportUserDataAction,
+  useUserData,
+} from '../../context/UserDataContext/UserDataContext';
 
 export default function UserData() {
-  const userSettings = useContext(UserDataContext);
+  const userData = useUserData();
+  const importUserData = useImportUserDataAction();
 
   const handleExportUserData = () => {
     const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(
-      JSON.stringify(userSettings.getDataExport())
+      JSON.stringify(userData)
     )}`;
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute('href', dataStr);
@@ -23,7 +27,6 @@ export default function UserData() {
   // https://stackoverflow.com/questions/61707105/react-app-upload-and-read-json-file-into-variable-without-a-server
   const handleUpload = e => {
     const file = e.target.files[0];
-    console.log('FOUND', file);
     if (file.type !== 'application/json') {
       alert('Must upload a JSON file.');
       return;
@@ -31,8 +34,7 @@ export default function UserData() {
     const fileReader = new FileReader();
     fileReader.readAsText(file, 'UTF-8');
     fileReader.onload = e => {
-      // console.log("e.target.result", e.target.result);
-      setFile(e.target.result as any);
+      setFile(e.target?.result as any);
     };
   };
 
@@ -40,7 +42,7 @@ export default function UserData() {
     if (file === '') return;
     try {
       const data = JSON.parse(file);
-      if (userSettings.importUserData(data)) {
+      if (importUserData(data)) {
         setFile('');
         setResetInput(resetInput + 1); // clears file input
       }

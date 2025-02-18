@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useDarkMode } from '../../context/DarkModeContext';
 import CodeBlock from './CodeBlock/CodeBlock';
 
 // Note: try to avoid adding inline styles here; rather, use css selectors to target them.
@@ -56,16 +57,23 @@ const inlineCode = (props): JSX.Element => (
 );
 const a = ({ children, ...props }) => (
   <a
-    target={!props.href || props.href.startsWith('#') ? null : '_blank'}
+    target={!props.href || props.href.startsWith('#') ? undefined : '_blank'}
     {...props}
   >
     {children}
   </a>
 );
-const pre = ({ children, ...props }) => {
+const pre = ({ children, copyButton = true, ...props }) => {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const isDarkMode = useDarkMode();
+
   return (
     <pre {...props}>
-      <CodeBlock {...children.props} />
+      <CodeBlock
+        copyButton={copyButton}
+        isDarkMode={isDarkMode}
+        {...children.props}
+      />
     </pre>
   );
 };

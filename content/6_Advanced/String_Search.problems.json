@@ -40,9 +40,9 @@
     },
     {
       "uniqueId": "poj-USACOGold05CowPatterns",
-      "name": "(USACO Gold 05) Cow Patterns",
+      "name": "Cow Patterns",
       "url": "http://poj.org/problem?id=3167",
-      "source": "POJ",
+      "source": "Old Gold",
       "difficulty": "Hard",
       "isStarred": false,
       "tags": ["Strings", "KMP"],
@@ -180,6 +180,20 @@
       }
     }
   ],
+  "trieFocus": [
+    {
+      "uniqueId": "cses-1731",
+      "name": "Word Combinations",
+      "url": "https://cses.fi/problemset/task/1731/",
+      "source": "CSES",
+      "difficulty": "Easy",
+      "isStarred": false,
+      "tags": ["Strings", "DP"],
+      "solutionMetadata": {
+        "kind": "none"
+      }
+    }
+  ],
   "mana": [
     {
       "uniqueId": "cf-1080E",
@@ -224,7 +238,7 @@
   "trie": [
     {
       "uniqueId": "coci-21-vlak",
-      "name": "2021 - Vlak",
+      "name": "Vlak",
       "url": "https://oj.uz/problem/view/COCI20_vlak",
       "source": "COCI",
       "difficulty": "Very Easy",
@@ -237,7 +251,7 @@
     },
     {
       "uniqueId": "ioi-08-TypePrinter",
-      "name": "2008 - Type Printer",
+      "name": "Type Printer",
       "url": "https://oj.uz/problem/view/IOI08_printer",
       "source": "IOI",
       "difficulty": "Very Easy",
@@ -249,6 +263,18 @@
       }
     },
     {
+      "uniqueId": "cf-888G",
+      "name": "Xor-MST",
+      "url": "https://codeforces.com/contest/888/problem/G",
+      "source": "CF",
+      "difficulty": "Normal",
+      "isStarred": false,
+      "tags": ["MST", "Trie"],
+      "solutionMetadata": {
+        "kind": "internal"
+      }
+    },
+    {
       "uniqueId": "ys-SetXORMin",
       "name": "Set XOR-Min",
       "url": "https://judge.yosupo.jp/problem/set_xor_min",
@@ -257,13 +283,26 @@
       "isStarred": false,
       "tags": ["Trie", "Greedy"],
       "solutionMetadata": {
-        "kind": "none"
+        "kind": "internal"
+      }
+    },
+    {
+      "uniqueId": "usaco-1281",
+      "name": "Find and Replace",
+      "url": "http://www.usaco.org/index.php?page=viewproblem2&cpid=1281",
+      "source": "Gold",
+      "difficulty": "Normal",
+      "isStarred": false,
+      "tags": ["Strings", "Trie"],
+      "solutionMetadata": {
+        "kind": "USACO",
+        "usacoId": "1281"
       }
     },
     {
       "uniqueId": "cf-1083B",
-      "name": "The Fair Nut and Strings",
-      "url": "https://codeforces.com/contest/1083/problem/B",
+      "name": "Old Berland Language",
+      "url": "https://codeforces.com/contest/37/problem/C",
       "source": "CF",
       "difficulty": "Normal",
       "isStarred": false,
@@ -297,6 +336,32 @@
       "solutionMetadata": {
         "kind": "autogen-label-from-site",
         "site": "AC"
+      }
+    },
+    {
+      "uniqueId": "cf-965E",
+      "name": "Short Code",
+      "url": "https://codeforces.com/contest/965/problem/E",
+      "source": "CF",
+      "difficulty": "Normal",
+      "isStarred": false,
+      "tags": ["Trie", "Tree", "Small to Large"],
+      "solutionMetadata": {
+        "kind": "autogen-label-from-site",
+        "site": "CF"
+      }
+    },
+    {
+      "uniqueId": "cf-665E",
+      "name": "Beautiful Subarrays",
+      "url": "https://codeforces.com/problemset/problem/665/E",
+      "source": "CF",
+      "difficulty": "Normal",
+      "isStarred": false,
+      "tags": ["Trie", "Tree", "Bitmasks"],
+      "solutionMetadata": {
+        "kind": "autogen-label-from-site",
+        "site": "CF"
       }
     },
     {
@@ -405,16 +470,82 @@
       }
     },
     {
-      "uniqueId": "dmoj-momoka",
+      "uniqueId": "mmcc-momoka",
       "name": "Momoka",
       "url": "https://dmoj.ca/problem/mmcc15p3",
-      "source": "DMOJ",
+      "source": "MMCC",
       "difficulty": "Very Hard",
       "isStarred": false,
       "tags": [],
       "solutionMetadata": {
         "kind": "autogen-label-from-site",
         "site": "DMOJ"
+      }
+    }
+  ],
+  "aho-corasick": [
+    {
+      "uniqueId": "finding-patterns",
+      "name": "Finding Patterns",
+      "url": "https://cses.fi/problemset/task/2102/",
+      "source": "CSES",
+      "difficulty": "Hard",
+      "isStarred": true,
+      "tags": [],
+      "solutionMetadata": {
+        "kind": "none"
+      }
+    }
+  ],
+  "finding-periods": [
+    {
+      "uniqueId": "finding-periods",
+      "name": "Finding Periods",
+      "url": "https://cses.fi/problemset/task/1733",
+      "source": "CSES",
+      "difficulty": "Normal",
+      "isStarred": true,
+      "tags": [],
+      "solutionMetadata": {
+        "kind": "none"
+      }
+    }
+  ],
+  "practice-problems": [
+    {
+      "uniqueId": "cses-1732",
+      "name": "Finding Borders",
+      "url": "https://cses.fi/problemset/task/1732/",
+      "source": "CSES",
+      "difficulty": "Normal",
+      "isStarred": false,
+      "tags": [],
+      "solutionMetadata": {
+        "kind": "internal"
+      }
+    },
+    {
+      "uniqueId": "cses-1110",
+      "name": "Minimal Rotation",
+      "url": "https://cses.fi/problemset/task/1110/",
+      "source": "CSES",
+      "difficulty": "Normal",
+      "isStarred": false,
+      "tags": [],
+      "solutionMetadata": {
+        "kind": "internal"
+      }
+    },
+    {
+      "uniqueId": "cses-1655",
+      "name": "Maximum Xor Subarray",
+      "url": "https://cses.fi/problemset/task/1655",
+      "source": "CSES",
+      "difficulty": "Normal",
+      "isStarred": false,
+      "tags": [],
+      "solutionMetadata": {
+        "kind": "internal"
       }
     }
   ]

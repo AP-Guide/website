@@ -19,20 +19,20 @@ import {
 import classNames from 'classnames';
 import { Link } from 'gatsby';
 import * as React from 'react';
-import { Fragment, useContext, useState } from 'react';
-import MODULE_ORDERING, {
-  SECTIONS,
-  SECTION_LABELS,
-} from '../../../content/ordering';
-import { SignInContext } from '../../context/SignInContext';
-import UserDataContext from '../../context/UserDataContext/UserDataContext';
-import { useUserGroups } from '../../hooks/groups/useUserGroups';
+import { Fragment, useState } from 'react';
+import { useSignIn } from '../../context/SignInContext';
+import {
+  useFirebaseUser,
+  useIsUserDataLoaded,
+  useSignOutAction,
+} from '../../context/UserDataContext/UserDataContext';
 import ContactUsSlideover from '../ContactUsSlideover/ContactUsSlideover';
-import { LoadingSpinner } from '../elements/LoadingSpinner';
 import Logo from '../Logo';
 import LogoSquare from '../LogoSquare';
 import MobileMenuButtonContainer from '../MobileMenuButtonContainer';
 import SectionsDropdown from '../SectionsDropdown';
+import { LoadingSpinner } from '../elements/LoadingSpinner';
+import Banner from './Banner';
 import { SearchModal } from './SearchModal';
 import { UserAvatarMenu } from './UserAvatarMenu';
 
@@ -40,34 +40,16 @@ export default function TopNavigationBar({
   transparent = false,
   linkLogoToIndex = false,
   currentSection = null,
-  hideClassesPromoBar = false,
+  hidePromoBar = false,
+  redirectToDashboard = false,
 }) {
-  const { firebaseUser, signOut, isLoaded, userProgressOnModules } = useContext(
-    UserDataContext
-  );
-  const { signIn } = React.useContext(SignInContext);
+  const firebaseUser = useFirebaseUser();
+  const signOut = useSignOutAction();
+  const isLoaded = useIsUserDataLoaded();
+  const { signIn } = useSignIn();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isContactUsActive, setIsContactUsActive] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const userGroups = useUserGroups();
-
-  const sections = {};
-  for (const section of Object.keys(MODULE_ORDERING)) {
-    let total = 0;
-    let completed = 0;
-    MODULE_ORDERING[section].forEach(chapter => {
-      chapter.items.forEach(module => {
-        total++;
-        if (Object.keys(userProgressOnModules).includes(module)) {
-          completed++;
-        }
-      });
-    });
-    sections[section] = {
-      total,
-      completed,
-    };
-  }
 
   const resources = [
     {
@@ -151,55 +133,16 @@ export default function TopNavigationBar({
       key: 'adv',
     },
   ];
-
-  const mobileLinks = [
-    {
-      label: 'Dashboard',
-      url: '/dashboard/',
-    },
-    ...SECTIONS.map(section => ({
-      label: SECTION_LABELS[section],
-      url: `/${section}/`,
-    })),
-    {
-      label: 'Problems',
-      url: '/problems/',
-    },
-    ...(userGroups.data?.length > 0
-      ? [
-          {
-            label: 'Groups',
-            url: '/groups',
-          },
-        ]
-      : []),
-  ];
-
   return (
     <>
-      {false && !hideClassesPromoBar && (
-        <div className="relative bg-blue-600">
-          <div className="max-w-screen-xl mx-auto py-3 px-3 sm:px-6 lg:px-8">
-            <div className="pr-16 sm:text-center sm:px-16">
-              <p className="font-medium text-white">
-                <span className="md:hidden">Register for the USACO January Workshop!</span>
-                <span className="hidden md:inline">
-                  USACO Bronze/Silver solutions explained in a live workshop TODAY!
-                </span>
-                <span className="block sm:ml-2 sm:inline-block">
-                  <a
-                    href="https://joincpi.org/workshops/usaco-january"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-white font-bold underline"
-                  >
-                    Learn more &rarr;
-                  </a>
-                </span>
-              </p>
-            </div>
-          </div>
-        </div>
+      {!hidePromoBar && (
+        <>
+          <Banner
+            text="Registration for Spring Live Classes Open"
+            action="Register"
+            link="https://joincpi.org/classes"
+          />
+        </>
       )}
 
       <nav
@@ -213,6 +156,7 @@ export default function TopNavigationBar({
             <div className="flex px-2 lg:px-0">
               <Link
                 to={linkLogoToIndex ? '/' : '/dashboard'}
+                state={{ redirect: redirectToDashboard }}
                 className="flex-shrink-0 flex items-center"
               >
                 <div className="block sm:hidden">
@@ -270,28 +214,26 @@ export default function TopNavigationBar({
                           >
                             <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
                               <div className="relative grid gap-6 bg-white dark:bg-gray-800 px-5 py-6 sm:gap-8 sm:p-8 lg:grid-cols-2">
-                                {userGroups.data?.length > 0 && (
-                                  <Link
-                                    to="/groups/"
-                                    className="-m-3 p-3 flex items-start rounded-lg dark:hover:bg-gray-700 hover:bg-gray-100 transition ease-in-out duration-150"
-                                  >
-                                    <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-md bg-blue-500 text-white sm:h-12 sm:w-12">
-                                      <UserGroupIcon
-                                        className="h-6 w-6"
-                                        aria-hidden="true"
-                                      />
-                                    </div>
-                                    <div className="ml-4">
-                                      <p className="text-base font-medium text-gray-900 dark:text-dark-high-emphasis">
-                                        Groups
-                                      </p>
-                                      <p className="mt-1 text-sm text-gray-500 dark:text-dark-med-emphasis">
-                                        A Learning Management System fully
-                                        integrated with the USACO Guide.
-                                      </p>
-                                    </div>
-                                  </Link>
-                                )}
+                                <Link
+                                  to="/groups/"
+                                  className="-m-3 p-3 flex items-start rounded-lg dark:hover:bg-gray-700 hover:bg-gray-100 transition ease-in-out duration-150"
+                                >
+                                  <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-md bg-blue-500 text-white sm:h-12 sm:w-12">
+                                    <UserGroupIcon
+                                      className="h-6 w-6"
+                                      aria-hidden="true"
+                                    />
+                                  </div>
+                                  <div className="ml-4">
+                                    <p className="text-base font-medium text-gray-900 dark:text-dark-high-emphasis">
+                                      Groups
+                                    </p>
+                                    <p className="mt-1 text-sm text-gray-500 dark:text-dark-med-emphasis">
+                                      A Learning Management System fully
+                                      integrated with the USACO Guide.
+                                    </p>
+                                  </div>
+                                </Link>
                                 {resources.map(item => (
                                   <a
                                     key={item.name}
@@ -445,7 +387,7 @@ export default function TopNavigationBar({
         </div>
         {/*
         Mobile menu, toggle classes based on menu state.
-        
+
         Menu open: "block", Menu closed: "hidden"
       */}
         <div className={`${isMobileNavOpen ? 'block' : 'hidden'} lg:hidden`}>
@@ -471,6 +413,18 @@ export default function TopNavigationBar({
             </div>
             <div className="py-5 px-4">
               <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+                <Link
+                  to="/groups/"
+                  className="group -m-3 p-3 flex items-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <UserGroupIcon
+                    className="flex-shrink-0 h-6 w-6 text-gray-600 dark:group-hover:text-gray-400"
+                    aria-hidden="true"
+                  />
+                  <span className="ml-3 text-base font-medium text-gray-700 dark:text-gray-300">
+                    Groups
+                  </span>
+                </Link>
                 {resources.map(item => (
                   <a
                     key={item.name}
